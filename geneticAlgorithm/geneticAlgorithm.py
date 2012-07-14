@@ -1,35 +1,37 @@
 import numpy
 
-def weighted_choice(weights):
+# TODO: Rewrite this so it doesn't depend on numpy and is faster.
+# Right now it's a huge time sink.
+def weightedChoice(weights):
 	totals = numpy.cumsum(weights)
 	norm = totals[-1]
 	throw = numpy.random.rand()*norm
 	return numpy.searchsorted(totals, throw)
 
-class genetic_algorithm:
+class GeneticAlgorithm:
 		
-	def __init__( self, get_fitness, breed_creature, get_random_creature ):
-		self.get_fitness = get_fitness
-		self.breed_creature = breed_creature
-		self.get_random_creature = get_random_creature
+	def __init__( self, getFitness, breedCreature, getRandomCreature ):
+		self.getFitness = getFitness
+		self.breedCreature = breedCreature
+		self.getRandomCreature = getRandomCreature
 
-		self.population_size = 100
-		self.current_population = []
-		for creature_index in range( self.population_size ):
-			self.current_population.append( self.get_random_creature() )
-		self.historical_populations = []
+		self.populationSize = 100
+		self.currentPopulation = []
+		for creatureIndex in range( self.populationSize ):
+			self.currentPopulation.append( self.getRandomCreature() )
+		self.historicalPopulations = []
 	
-	def increment_generation( self ):
+	def incrementGeneration( self ):
 		#calculate fitness
 		fitness = []
-		for creature in self.current_population :
-			fitness.append( self.get_fitness( creature ) )
+		for creature in self.currentPopulation :
+			fitness.append( self.getFitness( creature ) )
 
 		#generate the new population
-		new_population = []
-		for new_creature_index in range( self.population_size ):
-			new_population.append( self.breed_creature( self.current_population[ weighted_choice( fitness ) ], self.current_population[ weighted_choice( fitness ) ] ) )
+		newPopulation = []
+		for newCreatureIndex in range( self.populationSize ):
+			newPopulation.append( self.breedCreature( self.currentPopulation[ weightedChoice( fitness ) ], self.currentPopulation[ weightedChoice( fitness ) ] ) )
 		
 		#tick the population forward
-		self.historical_populations.append( self.current_population )
-		self.current_population = new_population
+		self.historicalPopulations.append( self.currentPopulation )
+		self.currentPopulation = newPopulation

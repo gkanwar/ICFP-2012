@@ -21,8 +21,6 @@ def dynamicSearch( start, isGoal, neighbors, heuristic ):
 				minEstCost = estCost[ node ]
 				current = node
 
-		print current
-
 		# Check if we've reached the goal...
 		if isGoal( current ):
 			return reconstructPath( current, pathMap )
