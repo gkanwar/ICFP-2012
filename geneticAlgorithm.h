@@ -8,18 +8,18 @@
 template <class Creature>
 class GeneticAlgorithm {
 private:
-	//Dynamically assigned member functions...
-	float (*fitness)( Creature );
-	Creature (*breed)( Creature, Creature );
-	Creature (*getRandomCreature)();
+    //Dynamically assigned member functions...
+    float (*fitness)( Creature );
+    Creature (*breed)( Creature, Creature );
+    Creature (*getRandomCreature)();
 
-	//Member Data
-	int populationSize;
-	Creature* population;
-	std::vector<Creature*> fossilRecord;
+    //Member Data
+    int populationSize;
+    Creature* population;
+    std::vector<Creature*> fossilRecord;
 public:
-	GeneticAlgorithm( float (*fitness)( Creature ), Creature (*breed)( Creature, Creature ),  Creature (*getRandomCreature)() );
-	float incrementGeneration();
+    GeneticAlgorithm( float (*fitness)( Creature ), Creature (*breed)( Creature, Creature ),  Creature (*getRandomCreature)() );
+    float incrementGeneration();
 };
 
 #include "geneticAlgorithm.cpp"
