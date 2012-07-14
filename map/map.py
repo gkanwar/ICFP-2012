@@ -1,3 +1,5 @@
+import array
+
 ROBOT = 'R'
 WALL = '#'
 ROCK = '*'
@@ -7,52 +9,75 @@ OPEN_LIFT = 'O'
 EARTH = '.'
 EMPTY = ' '
 
-WIN = 0
-LOSE = 1
-ABORT = 2
-CONTINUE = 3
+WIN = 1
+LOSE = 2
+ABORT = 3
+CONTINUE = 0
 
 class NaiveMap:
     """ This is a map simulator implementation that naively makes copies
     of the Whole Damn Map on each step """
 
-    def __init__(self, ascii_map):
-        ascii_map = ascii_map.strip().splitlines()
+    def __init__(self, inp):
+        lines = inp.strip().splitlines()
+        if '' in lines: # blank line
+            i = lines.index('')
+            ascii_map = lines[:i]
+            metadata = lines[i+1:]
+        else:
+            ascii_map = lines
+            metadata = []
+        # parse map
         m = len(ascii_map)
         n = max(len(line) for line in ascii_map)
         grid = []
         for y, line in enumerate(reversed(ascii_map)):
             line = line.ljust(n) # pad spaces
-            grid.append(list(line))
+            grid.append(array.array('c', line))
             if ROBOT in line:
                 x = line.index(ROBOT)
                 robot = (y, x)
         lambdas = 0
         moves = 0
-        self.state = (grid, robot, lambdas, moves)
+        steps_underwater = 0
+        self.state = (grid, robot, (lambdas, moves, steps_underwater))
         self.m = m
         self.n = n
+        # parse metadata
+        self.meta = {
+            'Water': 0,
+            'Flooding': 0,
+            'Waterproof': 10,
+            }
+        for line in metadata:
+            [key, value] = line.split()
+            self.meta[key] = int(value)
 
     def __str__(self):
         return self.pprint(self.state)
 
-    @staticmethod
-    def pprint(state):
-        (grid, robot, lambdas, moves) = state
+    def pprint(self, state):
+        (grid, robot, (lambdas, moves, steps_underwater)) = state
         ascii_map = '\n'.join(''.join(line) for line in reversed(grid))
         ret = """\
 {}
+
 Lambdas collected: {}
 Moves made: {}
-""".format(ascii_map, lambdas, moves)
+Consecutive moves underwater: {}
+""".format(ascii_map, lambdas, moves, steps_underwater)
         return ret
 
     def step(self, command, state=None, update=True, pprint=False):
         """ Executes a command, and returns the new state. """
+
+        (grid, robot, (lambdas, moves, steps_underwater)) = state or self.state
+        newgrid = [row[:] for row in grid] # make a copy
+
         complete = False
         abort = False
 
-        (grid, robot, lambdas, moves) = state or self.state
+        # robot movement
         (y, x) = robot
         if command == 'L':
             (yp, xp) = (y, x-1) # yp = "y prime"
@@ -62,13 +87,8 @@ Moves made: {}
             (yp, xp) = (y+1, x)
         elif command == 'D':
             (yp, xp) = (y-1, x)
-        elif command == 'A':
-            (yp, xp) = (y, x)
-            abort = True
         newloc = grid[yp][xp]
 
-        # robot movement
-        newgrid = [row[:] for row in grid] # make a copy
         if newloc in [EMPTY, EARTH, LAMBDA, OPEN_LIFT]:
             robot = (yp, xp)
             newgrid[yp][xp] = ROBOT
@@ -88,7 +108,9 @@ Moves made: {}
             newgrid[y][x] = EMPTY
             newgrid[y][x-2] = ROCK
 
-        if command != 'A':
+        if command == 'A':
+            abort = True
+        else:
             moves += 1
 
         # map update
@@ -119,12 +141,21 @@ Moves made: {}
                     # all lambdas collected
                     newgrid[y][x] = OPEN_LIFT
 
+        # water
+        water_level = self.meta['Water'] + (moves // self.meta['Flooding'] if self.meta['Flooding'] else 0)
+        if robot[0] < water_level:
+            steps_underwater += 1
+        else:
+            steps_underwater = 0
+
         # ending conditions
         ret = None
         if complete:
             ret = WIN
         elif abort:
             ret = ABORT
+        elif steps_underwater > self.meta['Waterproof']:
+            ret = LOSE
         else:
             (y, x) = robot
             if y+1 < self.m and newgrid[y+1][x] == ROCK and grid[y+1][x] != ROCK:
@@ -141,7 +172,7 @@ Moves made: {}
             ret = CONTINUE
             score = None
 
-        state = (newgrid, robot, lambdas, moves)
+        state = (newgrid, robot, (lambdas, moves, steps_underwater))
         if update:
             self.state = state
 
