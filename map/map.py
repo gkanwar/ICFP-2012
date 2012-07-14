@@ -1,4 +1,5 @@
 import array
+import copy
 
 ROBOT = 'R'
 WALL = '#'
@@ -14,11 +15,46 @@ LOSE = 2
 ABORT = 3
 CONTINUE = 0
 
-class NaiveMap:
-    """ This is a map simulator implementation that naively makes copies
-    of the Whole Damn Map on each step """
+class NaiveMapState(object):
+    """ This is a map representation that naively makes copies
+    of the Whole Damn Map on each state update """
+    def __init__(self, ascii_map, n):
+        self.grid = []
+        for y, line in enumerate(reversed(ascii_map)):
+            line = line.ljust(n) # pad spaces
+            self.grid.append(array.array('c', line))
+            if ROBOT in line:
+                x = line.index(ROBOT)
+                robot = (x, y)
+        self.robot = robot
 
-    def __init__(self, inp):
+    def __getitem__(self, loc):
+        (x, y) = loc
+        return self.grid[y][x]
+
+    def __setitem__(self, loc, value):
+        (x, y) = loc
+        self.grid[y][x] = value
+
+    def move(self, x, y):
+        self[self.robot] = EMPTY
+        self[x, y] = ROBOT
+        self.robot = (x, y)
+
+    def new(self):
+        return copy.deepcopy(self)
+
+    def __contains__(self, a):
+        return any(a in row for row in self.grid)
+
+    def __str__(self):
+        ascii_map = '\n'.join(''.join(line) for line in reversed(self.grid))
+        return ascii_map
+
+class MapSimulator(object):
+    """ Map simulator implementation """
+
+    def __init__(self, inp, map_cls):
         lines = inp.strip().splitlines()
         if '' in lines: # blank line
             i = lines.index('')
@@ -30,17 +66,11 @@ class NaiveMap:
         # parse map
         m = len(ascii_map)
         n = max(len(line) for line in ascii_map)
-        grid = []
-        for y, line in enumerate(reversed(ascii_map)):
-            line = line.ljust(n) # pad spaces
-            grid.append(array.array('c', line))
-            if ROBOT in line:
-                x = line.index(ROBOT)
-                robot = (y, x)
+        mapstate = map_cls(ascii_map, n)
         lambdas = 0
         moves = 0
         steps_underwater = 0
-        self.state = (grid, robot, (lambdas, moves, steps_underwater))
+        self.state = (mapstate, (lambdas, moves, steps_underwater))
         self.m = m
         self.n = n
         # parse metadata
@@ -57,8 +87,8 @@ class NaiveMap:
         return self.pprint(self.state)
 
     def pprint(self, state):
-        (grid, robot, (lambdas, moves, steps_underwater)) = state
-        ascii_map = '\n'.join(''.join(line) for line in reversed(grid))
+        (mapstate, (lambdas, moves, steps_underwater)) = state
+        ascii_map = str(mapstate)
         ret = """\
 {}
 
@@ -71,8 +101,8 @@ Consecutive moves underwater: {}
     def step(self, command, state=None, update=True, pprint=False):
         """ Executes a command, and returns the new state. """
 
-        (grid, robot, (lambdas, moves, steps_underwater)) = state or self.state
-        newgrid = [row[:] for row in grid] # make a copy
+        (mapstate, (lambdas, moves, steps_underwater)) = state or self.state
+        newmapstate = mapstate.new()
 
         complete = False
         abort = False
@@ -80,42 +110,38 @@ Consecutive moves underwater: {}
         wait = False
 
         # robot movement
-        (y, x) = robot
+        (x, y) = mapstate.robot
         if command == 'L':
-            (yp, xp) = (y, x-1) # yp = "y prime"
+            (xp, yp) = (x-1, y) # yp = "y prime"
         elif command == 'R':
-            (yp, xp) = (y, x+1)
+            (xp, yp) = (x+1, y)
         elif command == 'U':
-            (yp, xp) = (y+1, x)
+            (xp, yp) = (x, y+1)
         elif command == 'D':
-            (yp, xp) = (y-1, x)
-        elif command == 'W':
-            wait = True
+            (xp, yp) = (x, y-1)
+
+        newloc = mapstate[xp, yp]
+        moved = None
+
+        if newloc in [EMPTY, EARTH, LAMBDA, OPEN_LIFT]:
+            newmapstate.move(xp, yp)
+            if newloc == LAMBDA:
+                lambdas += 1
+            elif newloc == OPEN_LIFT:
+                complete = True
+        elif command == 'R' and newloc == ROCK and mapstate[x+2, y] == EMPTY:
+            newmapstate.move(xp, yp)
+            newmapstate[x, y] = EMPTY
+            newmapstate[x+2, y] = ROCK
+        elif command == 'L' and newloc == ROCK and mapstate[x-2, y] == EMPTY:
+            newmapstate.move(xp, yp)
+            newmapstate[x, y] = EMPTY
+            newmapstate[x-2, y] = ROCK
+        else:
             moved = False
 
-        if not wait:
-            newloc = grid[yp][xp]
-
-            if newloc in [EMPTY, EARTH, LAMBDA, OPEN_LIFT]:
-                robot = (yp, xp)
-                newgrid[yp][xp] = ROBOT
-                newgrid[y][x] = EMPTY
-                if newloc == LAMBDA:
-                    lambdas += 1
-                elif newloc == OPEN_LIFT:
-                    complete = True
-            elif command == 'R' and newloc == ROCK and grid[y][x+2] == EMPTY:
-                robot = (yp, xp)
-                newgrid[yp][xp] = ROBOT
-                newgrid[y][x] = EMPTY
-                newgrid[y][x+2] = ROCK
-            elif command == 'L' and newloc == ROCK and grid[y][x-2] == EMPTY:
-                robot = (yp, xp)
-                newgrid[yp][xp] = ROBOT
-                newgrid[y][x] = EMPTY
-                newgrid[y][x-2] = ROCK
-            else:
-                moved = False
+        if moved is None:
+            moved = True
 
         if command == 'A':
             abort = True
@@ -123,36 +149,36 @@ Consecutive moves underwater: {}
             moves += 1
 
         # map update
-        grid = newgrid
-        newgrid = [row[:] for row in grid]
+        mapstate = newmapstate
+        newmapstate = mapstate.new()
         for x in range(self.n):
             for y in range(self.m):
-                if grid[y][x] == ROCK:
-                    if y-1 >= 0 and grid[y-1][x] == EMPTY:
+                if mapstate[x, y] == ROCK:
+                    if y-1 >= 0 and mapstate[x, y-1] == EMPTY:
                         # rock fall
-                        newgrid[y][x] = EMPTY
-                        newgrid[y-1][x] = ROCK
-                    elif y-1 >= 0 and grid[y-1][x] == ROCK:
-                        if x+1 < self.n and grid[y][x+1] == EMPTY and grid[y-1][x+1] == EMPTY:
+                        newmapstate[x, y] = EMPTY
+                        newmapstate[x, y-1] = ROCK
+                    elif y-1 >= 0 and mapstate[x, y-1] == ROCK:
+                        if x+1 < self.n and mapstate[x+1, y] == EMPTY and mapstate[x+1, y-1] == EMPTY:
                             # rock slide right
-                            newgrid[y][x] = EMPTY
-                            newgrid[y-1][x+1] = ROCK
-                        elif x-1 >= 0 and grid[y][x-1] == EMPTY and grid[y-1][x-1] == EMPTY:
+                            newmapstate[x, y] = EMPTY
+                            newmapstate[x+1, y-1] = ROCK
+                        elif x-1 >= 0 and mapstate[x-1, y] == EMPTY and mapstate[x-1, y-1] == EMPTY:
                             # rock slide left
-                            newgrid[y][x] = EMPTY
-                            newgrid[y-1][x-1] = ROCK
-                    elif y-1 >= 0 and grid[y-1][x] == LAMBDA:
-                        if x+1 < self.n and grid[y][x+1] == EMPTY and grid[y-1][x+1] == EMPTY:
+                            newmapstate[x, y] = EMPTY
+                            newmapstate[x-1, y-1] = ROCK
+                    elif y-1 >= 0 and mapstate[x, y-1] == LAMBDA:
+                        if x+1 < self.n and mapstate[x+1, y] == EMPTY and mapstate[x+1, y-1] == EMPTY:
                             # rock slide right
-                            newgrid[y][x] = EMPTY
-                            newgrid[y-1][x+1] = ROCK
-                elif grid[y][x] == CLOSED_LIFT and not any(LAMBDA in row for row in grid):
+                            newmapstate[x, y] = EMPTY
+                            newmapstate[x+1, y-1] = ROCK
+                elif mapstate[x, y] == CLOSED_LIFT and LAMBDA not in mapstate:
                     # all lambdas collected
-                    newgrid[y][x] = OPEN_LIFT
+                    newmapstate[x, y] = OPEN_LIFT
 
         # water
         water_level = self.meta['Water'] + (moves // self.meta['Flooding'] if self.meta['Flooding'] else 0)
-        if robot[0] < water_level:
+        if mapstate.robot[0] < water_level:
             steps_underwater += 1
         else:
             steps_underwater = 0
@@ -166,8 +192,8 @@ Consecutive moves underwater: {}
         elif steps_underwater > self.meta['Waterproof']:
             ret = LOSE
         else:
-            (y, x) = robot
-            if y+1 < self.m and newgrid[y+1][x] == ROCK and grid[y+1][x] != ROCK:
+            (x, y) = mapstate.robot
+            if y+1 < self.m and newmapstate[x, y+1] == ROCK and mapstate[x, y+1] != ROCK:
                 ret = LOSE
 
         # scoring
@@ -181,7 +207,7 @@ Consecutive moves underwater: {}
             ret = CONTINUE
             score = None
 
-        state = (newgrid, robot, (lambdas, moves, steps_underwater))
+        state = (newmapstate, (lambdas, moves, steps_underwater))
         if update:
             self.state = state
 
