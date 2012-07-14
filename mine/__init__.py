@@ -1,2 +1,2 @@
-from map import NaiveMapState
-from map import MapSimulator
+from mine import NaiveMapState
+from mine import MapSimulator
