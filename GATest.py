@@ -24,16 +24,39 @@ print "Testing Search!"
 
 print dynamicSearch( 30, lambda x: x == 0, lambda x: set( [ ( x-1, 1 ), ( x+1, 1 ) ] ), lambda x: x )
 
+class TESTMAP:
+	this.location
+# Returns a pruned list of neighbors of a map;
+# e.g. maps that can be reached after the robot
+# takes a single move. Only "useful" maps are
+# returned (e.g. the robot cannot abort).
 def neighbors( map ):
-	validCommands = [ 'U', 'D', 'L', 'R' ]
-	for command in validCommands:
-		state, ( status, score ) = map.step( command, state=None, update=False, pprint=False );
-		print NaiveMap.pprint( state ), status, score
-	
-print neighbors( m )
+	validCommands = [ 'U', 'D', 'L', 'R', 'W' ]
+	neighbors = [ update( map, command ) for command in validCommands ]
+	#TODO prune neighbors.
+	return [ ( neighbor, 1 ) for neighbor in neighbors ]
 
+# Returns a function object that will return true
+# iff the robot is at the goal position in the
+# map passed in.
 def makeIsGoal( goal ):
-	return lambda map: goal == map.state[2]
+	return lambda map: goal == map.getRobotLocation()
+
+# Returns a function object which will return the
+# manhattan distance between the robot and the
+# goal in the map. Since the robot can make one
+# move each step at most, this heuristic is permissible.
+def makeHeuristic( goal ):
+	return lambda map: manhattanDistance( goal, map.getRobotLocation() )
+
+#DUMMY FXN
+def update( map, command ):
+	return (map, command)
+
+# Calculates the manhattan distance from pointA
+# to pointB, i.e. the sum of delta X and delta Y. 
+def manhattanDistance( pointA, pointB ):
+	return abs( pointA[0] - pointB[0] ) + abs( pointA[1] - pointB[1] )
 
 m.transduce('LDRDDUULLLDDL')
 
