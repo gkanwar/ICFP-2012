@@ -76,6 +76,7 @@ Consecutive moves underwater: {}
 
         complete = False
         abort = False
+        moved = True
 
         # robot movement
         (y, x) = robot
@@ -107,6 +108,8 @@ Consecutive moves underwater: {}
             newgrid[yp][xp] = ROBOT
             newgrid[y][x] = EMPTY
             newgrid[y][x-2] = ROCK
+        else:
+            moved = False
 
         if command == 'A':
             abort = True
@@ -181,12 +184,12 @@ Consecutive moves underwater: {}
             if ret != CONTINUE:
                 print 'Mining over, score: {}'.format(score)
 
-        return state, (ret, score)
+        return state, (ret, score, moved)
 
     def transduce(self, commands, state=None, update=True, pprint=False):
         state = state or self.state
         for command in commands:
-            state, (ret, score) = self.step(command, state=state, update=update)
+            state, (ret, score, moved) = self.step(command, state=state, update=update)
             if ret != CONTINUE:
                 break
 
