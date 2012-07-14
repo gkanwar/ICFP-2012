@@ -6,7 +6,7 @@ from search import dynamicSearch
 #We don't yet cache the best creature to return when time is called.
 #We don't yet allow the cardinality of the path to vary. (Always 5 waypoints)
 #We don't check to make sure all our waypoints are valid.
-#If a waypoint is invalid, it will just cause the creature to get a score of whatever it had when the waypoint search fails.
+#If a waypoint is invalid, it will just cause the creature to get a score of whatever it had when the waypoint search failed.
 
 print "Testing Map!"
 m = NaiveMap("""
@@ -25,7 +25,11 @@ print "Testing Search!"
 print dynamicSearch( 30, lambda x: x == 0, lambda x: set( [ ( x-1, 1 ), ( x+1, 1 ) ] ), lambda x: x )
 
 class TESTMAP:
-	this.location
+	def __init__( self, robotLocation ):
+		self.robotLocation = robotLocation
+	def getRobotLocation( self ):
+		return self.robotLocation
+
 # Returns a pruned list of neighbors of a map;
 # e.g. maps that can be reached after the robot
 # takes a single move. Only "useful" maps are
@@ -51,18 +55,30 @@ def makeHeuristic( goal ):
 
 #DUMMY FXN
 def update( map, command ):
-	return (map, command)
+	newRobotLocation = map.getRobotLocation()	
+	if command == 'U':
+		newRobotLocation = ( newRobotLocation[0], newRobotLocation[1] + 1 )
+	if command == 'D':
+                newRobotLocation = ( newRobotLocation[0], newRobotLocation[1] - 1 )		
+	if command == 'L':
+		newRobotLocation = ( newRobotLocation[0] - 1, newRobotLocation[1] )
+	if command == 'R':
+		newRobotLocation = ( newRobotLocation[0] + 1, newRobotLocation[1] )
+	if command == 'W':
+		pass
+	return TESTMAP( newRobotLocation )
 
 # Calculates the manhattan distance from pointA
 # to pointB, i.e. the sum of delta X and delta Y. 
 def manhattanDistance( pointA, pointB ):
 	return abs( pointA[0] - pointB[0] ) + abs( pointA[1] - pointB[1] )
 
+print [ map.getRobotLocation() for map in dynamicSearch( TESTMAP( ( 30,30 ) ), makeIsGoal( (0,0) ), neighbors, makeHeuristic( (0,0) ) ) ]
+
 m.transduce('LDRDDUULLLDDL')
 
 print m
 
-'''
 print "Testing GA!"
 import numpy
 import math
@@ -86,6 +102,3 @@ for run in range(5):
 		g.incrementGeneration()
 	plot( averageFitness )
 show()
-'''
-
- 
