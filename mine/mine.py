@@ -15,14 +15,14 @@ LOSE = 2
 ABORT = 3
 CONTINUE = 0
 
-class NaiveMapState(object):
-    """ This is a map representation that naively makes copies
-    of the Whole Damn Map on each state update """
-    def __init__(self, ascii_map):
+class NaiveMineState(object):
+    """ This is a mine representation that naively makes copies
+    of the Whole Damn Mine on each state update """
+    def __init__(self, ascii_mine):
         m = len(ascii_map)
-        n = max(len(line) for line in ascii_map)
+        n = max(len(line) for line in ascii_mine)
         self.grid = []
-        for y, line in enumerate(reversed(ascii_map)):
+        for y, line in enumerate(reversed(ascii_mine)):
             line = line.ljust(n) # pad spaces
             self.grid.append(array.array('c', line))
             if ROBOT in line:
@@ -55,27 +55,27 @@ class NaiveMapState(object):
         return any(a in row for row in self.grid)
 
     def __str__(self):
-        ascii_map = '\n'.join(''.join(line) for line in reversed(self.grid))
-        return ascii_map
+        ascii_mine = '\n'.join(''.join(line) for line in reversed(self.grid))
+        return ascii_mine
 
-class MapSimulator(object):
-    """ Map simulator implementation """
+class MineSimulator(object):
+    """ Mine simulator implementation """
 
-    def __init__(self, inp, map_cls):
+    def __init__(self, inp, mine_cls):
         lines = inp.rstrip().splitlines()
         if '' in lines: # blank line
             i = lines.index('')
-            ascii_map = lines[:i]
+            ascii_mine = lines[:i]
             metadata = lines[i+1:]
         else:
-            ascii_map = lines
+            ascii_mine = lines
             metadata = []
-        # parse map
-        mapstate = map_cls(ascii_map, n)
+        # parse mine
+        minestate = mine_cls(ascii_mine, n)
         lambdas = 0
         moves = 0
         steps_underwater = 0
-        self.state = (mapstate, (lambdas, moves, steps_underwater))
+        self.state = (minestate, (lambdas, moves, steps_underwater))
         # parse metadata
         self.meta = {
             'Water': 0,
@@ -90,22 +90,22 @@ class MapSimulator(object):
         return self.pprint(self.state)
 
     def pprint(self, state):
-        (mapstate, (lambdas, moves, steps_underwater)) = state
-        ascii_map = str(mapstate)
+        (minestate, (lambdas, moves, steps_underwater)) = state
+        ascii_mine = str(minestate)
         ret = """\
 {}
 
 Lambdas collected: {}
 Moves made: {}
 Consecutive moves underwater: {}
-""".format(ascii_map, lambdas, moves, steps_underwater)
+""".format(ascii_mine, lambdas, moves, steps_underwater)
         return ret
 
     def step(self, command, state=None, update=True, pprint=False):
         """ Executes a command, and returns the new state. """
 
-        (mapstate, (lambdas, moves, steps_underwater)) = state or self.state
-        newmapstate = mapstate.new()
+        (minestate, (lambdas, moves, steps_underwater)) = state or self.state
+        newminestate = minestate.new()
 
         complete = False
         abort = False
@@ -113,7 +113,7 @@ Consecutive moves underwater: {}
         wait = False
 
         # robot movement
-        (x, y) = mapstate.robot
+        (x, y) = minestate.robot
         if command == 'L':
             (xp, yp) = (x-1, y) # yp = "y prime"
         elif command == 'R':
@@ -123,23 +123,23 @@ Consecutive moves underwater: {}
         elif command == 'D':
             (xp, yp) = (x, y-1)
 
-        newloc = mapstate[xp, yp]
+        newloc = minestate[xp, yp]
         moved = None
 
         if newloc in [EMPTY, EARTH, LAMBDA, OPEN_LIFT]:
-            newmapstate.move(xp, yp)
+            newminestate.move(xp, yp)
             if newloc == LAMBDA:
                 lambdas += 1
             elif newloc == OPEN_LIFT:
                 complete = True
-        elif command == 'R' and newloc == ROCK and mapstate[x+2, y] == EMPTY:
-            newmapstate.move(xp, yp)
-            newmapstate[x, y] = EMPTY
-            newmapstate[x+2, y] = ROCK
-        elif command == 'L' and newloc == ROCK and mapstate[x-2, y] == EMPTY:
-            newmapstate.move(xp, yp)
-            newmapstate[x, y] = EMPTY
-            newmapstate[x-2, y] = ROCK
+        elif command == 'R' and newloc == ROCK and minestate[x+2, y] == EMPTY:
+            newminestate.move(xp, yp)
+            newminestate[x, y] = EMPTY
+            newminestate[x+2, y] = ROCK
+        elif command == 'L' and newloc == ROCK and minestate[x-2, y] == EMPTY:
+            newminestate.move(xp, yp)
+            newminestate[x, y] = EMPTY
+            newminestate[x-2, y] = ROCK
         else:
             moved = False
 
@@ -151,37 +151,37 @@ Consecutive moves underwater: {}
         else:
             moves += 1
 
-        # map update
-        mapstate = newmapstate
-        newmapstate = mapstate.new()
+        # mine update
+        minestate = newminestate
+        newminestate = minestate.new()
         for x in range(self.width):
             for y in range(self.height):
-                if mapstate[x, y] == ROCK:
-                    if y-1 >= 0 and mapstate[x, y-1] == EMPTY:
+                if minestate[x, y] == ROCK:
+                    if y-1 >= 0 and minestate[x, y-1] == EMPTY:
                         # rock fall
-                        newmapstate[x, y] = EMPTY
-                        newmapstate[x, y-1] = ROCK
-                    elif y-1 >= 0 and mapstate[x, y-1] == ROCK:
-                        if x+1 < self.n and mapstate[x+1, y] == EMPTY and mapstate[x+1, y-1] == EMPTY:
+                        newminestate[x, y] = EMPTY
+                        newminestate[x, y-1] = ROCK
+                    elif y-1 >= 0 and minestate[x, y-1] == ROCK:
+                        if x+1 < self.n and minestate[x+1, y] == EMPTY and minestate[x+1, y-1] == EMPTY:
                             # rock slide right
-                            newmapstate[x, y] = EMPTY
-                            newmapstate[x+1, y-1] = ROCK
-                        elif x-1 >= 0 and mapstate[x-1, y] == EMPTY and mapstate[x-1, y-1] == EMPTY:
+                            newminestate[x, y] = EMPTY
+                            newminestate[x+1, y-1] = ROCK
+                        elif x-1 >= 0 and minestate[x-1, y] == EMPTY and minestate[x-1, y-1] == EMPTY:
                             # rock slide left
-                            newmapstate[x, y] = EMPTY
-                            newmapstate[x-1, y-1] = ROCK
-                    elif y-1 >= 0 and mapstate[x, y-1] == LAMBDA:
-                        if x+1 < self.n and mapstate[x+1, y] == EMPTY and mapstate[x+1, y-1] == EMPTY:
+                            newminestate[x, y] = EMPTY
+                            newminestate[x-1, y-1] = ROCK
+                    elif y-1 >= 0 and minestate[x, y-1] == LAMBDA:
+                        if x+1 < self.n and minestate[x+1, y] == EMPTY and minestate[x+1, y-1] == EMPTY:
                             # rock slide right
-                            newmapstate[x, y] = EMPTY
-                            newmapstate[x+1, y-1] = ROCK
-                elif mapstate[x, y] == CLOSED_LIFT and LAMBDA not in mapstate:
+                            newminestate[x, y] = EMPTY
+                            newminestate[x+1, y-1] = ROCK
+                elif minestate[x, y] == CLOSED_LIFT and LAMBDA not in minestate:
                     # all lambdas collected
-                    newmapstate[x, y] = OPEN_LIFT
+                    newminestate[x, y] = OPEN_LIFT
 
         # water
         water_level = self.meta['Water'] + (moves // self.meta['Flooding'] if self.meta['Flooding'] else 0)
-        if mapstate.robot[0] < water_level:
+        if minestate.robot[0] < water_level:
             steps_underwater += 1
         else:
             steps_underwater = 0
@@ -195,8 +195,8 @@ Consecutive moves underwater: {}
         elif steps_underwater > self.meta['Waterproof']:
             ret = LOSE
         else:
-            (x, y) = mapstate.robot
-            if y+1 < self.m and newmapstate[x, y+1] == ROCK and mapstate[x, y+1] != ROCK:
+            (x, y) = minestate.robot
+            if y+1 < self.m and newminestate[x, y+1] == ROCK and minestate[x, y+1] != ROCK:
                 ret = LOSE
 
         # scoring
@@ -210,7 +210,7 @@ Consecutive moves underwater: {}
             ret = CONTINUE
             score = None
 
-        state = (newmapstate, (lambdas, moves, steps_underwater))
+        state = (newminestate, (lambdas, moves, steps_underwater))
         if update:
             self.state = state
 
