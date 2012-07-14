@@ -23,7 +23,7 @@ class NaiveMap:
             ascii_map = lines[:i]
             metadata = lines[i+1:]
         else:
-            ascii_map = inp
+            ascii_map = lines
             metadata = []
         # parse map
         m = len(ascii_map)
