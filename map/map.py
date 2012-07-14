@@ -141,7 +141,7 @@ Consecutive moves underwater: {}
 
         # water
         water_level = self.meta['Water'] + moves // self.meta['Flooding']
-        if robot[0] <= water_level:
+        if robot[0] < water_level:
             steps_underwater += 1
         else:
             steps_underwater = 0
