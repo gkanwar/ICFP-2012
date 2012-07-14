@@ -21,6 +21,10 @@ class NaiveMineState
     void setRobot(pair<int, int> loc); // Warning: This will overwrite the element at the robot location
     int getWidth();
     int getHeight();
+    bool isWon();
+    void setWon(bool won);
+    bool isDone();
+    void setDone(bool done);
     // TODO: Add meta data getters
 };
 
