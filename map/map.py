@@ -55,7 +55,7 @@ class MapSimulator(object):
     """ Map simulator implementation """
 
     def __init__(self, inp, map_cls):
-        lines = inp.strip().splitlines()
+        lines = inp.rstrip().splitlines()
         if '' in lines: # blank line
             i = lines.index('')
             ascii_map = lines[:i]
