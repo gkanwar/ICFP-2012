@@ -11,18 +11,18 @@ for i in range( -10, 100 ):
 def neighbors( point ):
 	(x,y) = point
 
-	canidates = [
+	candidates = [
 		(x-1, y),
 		(x+1, y),
 		(x, y-1),
 		(x, y+1)
 	]
 
-	for canidate in canidates:
-		if canidate in obstacles:
-			canidates.remove( canidate )
+	for candidate in candidates:
+		if candidate in obstacles:
+			candidates.remove( canidate )
 
-	return set( [ (point, 1) for point in canidates] )
+	return set( [ (point, 1) for point in candidates] )
 
 def manhattanDistance( point ):
 	(x,y) = point
