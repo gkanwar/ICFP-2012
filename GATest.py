@@ -38,14 +38,14 @@ class TestMap:
 def neighbors( m ):
 	(x,y) = m.getLoc()
 
-	mines = [
-		TestMap((x-1, y)),
-		TestMap((x+1, y)),
-		TestMap((x, y-1)),
-		TestMap((x, y+1))
+	canidates = [
+		(x-1, y),
+		(x+1, y),
+		(x, y-1),
+		(x, y+1)
 	]
 
-	return set( [ ( mine, 1 ) for mine in mines ] )
+	return set( [ (TestMap(point), 1) for point in canidates] )
 
 def heuristic( m ):
 	(x,y) = m.getLoc()
