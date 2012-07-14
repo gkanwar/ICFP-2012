@@ -77,6 +77,7 @@ Consecutive moves underwater: {}
         complete = False
         abort = False
         moved = True
+        wait = False
 
         # robot movement
         (y, x) = robot
@@ -88,28 +89,33 @@ Consecutive moves underwater: {}
             (yp, xp) = (y+1, x)
         elif command == 'D':
             (yp, xp) = (y-1, x)
-        newloc = grid[yp][xp]
-
-        if newloc in [EMPTY, EARTH, LAMBDA, OPEN_LIFT]:
-            robot = (yp, xp)
-            newgrid[yp][xp] = ROBOT
-            newgrid[y][x] = EMPTY
-            if newloc == LAMBDA:
-                lambdas += 1
-            elif newloc == OPEN_LIFT:
-                complete = True
-        elif command == 'R' and newloc == ROCK and grid[y][x+2] == EMPTY:
-            robot = (yp, xp)
-            newgrid[yp][xp] = ROBOT
-            newgrid[y][x] = EMPTY
-            newgrid[y][x+2] = ROCK
-        elif command == 'L' and newloc == ROCK and grid[y][x-2] == EMPTY:
-            robot = (yp, xp)
-            newgrid[yp][xp] = ROBOT
-            newgrid[y][x] = EMPTY
-            newgrid[y][x-2] = ROCK
-        else:
+        elif command == 'W':
+            wait = True
             moved = False
+
+        if not wait:
+            newloc = grid[yp][xp]
+
+            if newloc in [EMPTY, EARTH, LAMBDA, OPEN_LIFT]:
+                robot = (yp, xp)
+                newgrid[yp][xp] = ROBOT
+                newgrid[y][x] = EMPTY
+                if newloc == LAMBDA:
+                    lambdas += 1
+                elif newloc == OPEN_LIFT:
+                    complete = True
+            elif command == 'R' and newloc == ROCK and grid[y][x+2] == EMPTY:
+                robot = (yp, xp)
+                newgrid[yp][xp] = ROBOT
+                newgrid[y][x] = EMPTY
+                newgrid[y][x+2] = ROCK
+            elif command == 'L' and newloc == ROCK and grid[y][x-2] == EMPTY:
+                robot = (yp, xp)
+                newgrid[yp][xp] = ROBOT
+                newgrid[y][x] = EMPTY
+                newgrid[y][x-2] = ROCK
+            else:
+                moved = False
 
         if command == 'A':
             abort = True
