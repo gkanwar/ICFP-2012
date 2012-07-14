@@ -7,56 +7,56 @@ from search import dynamicSearch
 #We don't check to make sure all our waypoints are valid.
 #If a waypoint is invalid, it will just cause the creature to get a score of whatever it had when the waypoint search failed.
 
-class TESTMAP:
-	def __init__( self, robotLocation ):
-		self.robotLocation = robotLocation
-	def getRobotLocation( self ):
-		return self.robotLocation
+def neighbors1( point ):
+	(x,y) = point
 
-# Returns a pruned list of neighbors of a map;
-# e.g. maps that can be reached after the robot
-# takes a single move. Only "useful" maps are
-# returned (e.g. the robot cannot abort).
-def neighbors( map ):
-	validCommands = [ 'U', 'D', 'L', 'R', 'W' ]
-	neighbors = [ update( map, command ) for command in validCommands ]
-	#TODO prune neighbors.
-	return [ ( neighbor, 1 ) for neighbor in neighbors ]
+	canidates = [
+		(x-1, y),
+		(x+1, y),
+		(x, y-1),
+		(x, y+1)
+	]
 
-# Returns a function object that will return true
-# iff the robot is at the goal position in the
-# map passed in.
-def makeIsGoal( goal ):
-	return lambda map: goal[0] == map.getRobotLocation()[0] and goal[1] == map.getRobotLocation()[1]
+	return set( [ (point, 1) for point in canidates] )
 
-# Returns a function object which will return the
-# manhattan distance between the robot and the
-# goal in the map. Since the robot can make one
-# move each step at most, this heuristic is permissible.
-def makeHeuristic( goal ):
-	return lambda map: manhattanDistance( goal, map.getRobotLocation() )
+def manhattanDistance1( point ):
+	(x,y) = point
+	return abs(x) + abs(y)
 
-#DUMMY FXN
-def update( map, command ):
-	newRobotLocation = map.getRobotLocation()	
-	if command == 'U':
-		newRobotLocation = ( newRobotLocation[0], newRobotLocation[1] + 1 )
-	if command == 'D':
-                newRobotLocation = ( newRobotLocation[0], newRobotLocation[1] - 1 )		
-	if command == 'L':
-		newRobotLocation = ( newRobotLocation[0] - 1, newRobotLocation[1] )
-	if command == 'R':
-		newRobotLocation = ( newRobotLocation[0] + 1, newRobotLocation[1] )
-	if command == 'W':
-		pass
-	return TESTMAP( newRobotLocation )
+def isGoal1( point ):
+	(x,y) = point
+	return ( x == 0 ) and ( y == 0 )
 
-# Calculates the manhattan distance from pointA
-# to pointB, i.e. the sum of delta X and delta Y. 
-def manhattanDistance( pointA, pointB ):
-	return abs( pointA[0] - pointB[0] ) + abs( pointA[1] - pointB[1] )
+print dynamicSearch( (30,30), isGoal1, neighbors1, manhattanDistance1 )
 
-print [ map.getRobotLocation() for map in dynamicSearch( TESTMAP( ( 30,30 ) ), makeIsGoal( (0,0) ), neighbors, makeHeuristic( (0,0) ) ) ]
+class TestMap:
+	def __init__( self, loc ):
+		self.loc = loc
+	def getLoc( self ):
+		return self.loc
+
+def neighbors( m ):
+	(x,y) = m.getLoc()
+
+	mines = [
+		TestMap((x-1, y)),
+		TestMap((x+1, y)),
+		TestMap((x, y-1)),
+		TestMap((x, y+1))
+	]
+
+	return set( [ ( mine, 1 ) for mine in mines ] )
+
+def heuristic( m ):
+	(x,y) = m.getLoc()
+	return abs(x) + abs(y)
+
+def isGoal( m ):
+	(x,y) = m.getLoc()
+	return ( x == 0 ) and ( y == 0 )
+
+print [ mine.getLoc() for mine in dynamicSearch( TestMap( (30,30) ), isGoal, neighbors, heuristic ) ]
+
 '''
 print "Testing GA!"
 import numpy
