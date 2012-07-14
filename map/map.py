@@ -7,10 +7,10 @@ OPEN_LIFT = 'O'
 EARTH = '.'
 EMPTY = ' '
 
-WIN = 0
-LOSE = 1
-ABORT = 2
-CONTINUE = 3
+WIN = 1
+LOSE = 2
+ABORT = 3
+CONTINUE = 0
 
 class NaiveMap:
     """ This is a map simulator implementation that naively makes copies
@@ -54,8 +54,7 @@ class NaiveMap:
     def __str__(self):
         return self.pprint(self.state)
 
-    @staticmethod
-    def pprint(state):
+    def pprint(self, state):
         (grid, robot, (lambdas, moves, steps_underwater)) = state
         ascii_map = '\n'.join(''.join(line) for line in reversed(grid))
         ret = """\
@@ -69,10 +68,14 @@ Consecutive moves underwater: {}
 
     def step(self, command, state=None, update=True, pprint=False):
         """ Executes a command, and returns the new state. """
+
+        (grid, robot, (lambdas, moves, steps_underwater)) = state or self.state
+        newgrid = [row[:] for row in grid] # make a copy
+
         complete = False
         abort = False
 
-        (grid, robot, (lambdas, moves, steps_underwater)) = state or self.state
+        # robot movement
         (y, x) = robot
         if command == 'L':
             (yp, xp) = (y, x-1) # yp = "y prime"
@@ -82,13 +85,8 @@ Consecutive moves underwater: {}
             (yp, xp) = (y+1, x)
         elif command == 'D':
             (yp, xp) = (y-1, x)
-        elif command == 'A':
-            (yp, xp) = (y, x)
-            abort = True
         newloc = grid[yp][xp]
 
-        # robot movement
-        newgrid = [row[:] for row in grid] # make a copy
         if newloc in [EMPTY, EARTH, LAMBDA, OPEN_LIFT]:
             robot = (yp, xp)
             newgrid[yp][xp] = ROBOT
@@ -108,7 +106,9 @@ Consecutive moves underwater: {}
             newgrid[y][x] = EMPTY
             newgrid[y][x-2] = ROCK
 
-        if command != 'A':
+        if command == 'A':
+            abort = True
+        else:
             moves += 1
 
         # map update
