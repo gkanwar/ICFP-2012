@@ -18,11 +18,13 @@ class NaiveMineState
     // TODO: Add meta data getters
 };
 
+// Mine state functions
 template<class MineStateType>
 MineStateType stepMineState(MineStateType state, char command);
-
 template<class MineStateType>
 MineStateType transduceMineState(MineStateType state, char* commands, int numCommands);
+template<class MineStateType>
+void printMineState(MineStateType state);
 
 template<class MineStateType> class MineSimulator
 {
