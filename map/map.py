@@ -88,7 +88,8 @@ Moves made: {}
             newgrid[y][x] = EMPTY
             newgrid[y][x-2] = ROCK
 
-        moves += 1
+        if command != 'A':
+            moves += 1
 
         # map update
         grid = newgrid
