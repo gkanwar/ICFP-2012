@@ -1,3 +1,5 @@
+import array
+
 ROBOT = 'R'
 WALL = '#'
 ROCK = '*'
@@ -31,7 +33,7 @@ class NaiveMap:
         grid = []
         for y, line in enumerate(reversed(ascii_map)):
             line = line.ljust(n) # pad spaces
-            grid.append(list(line))
+            grid.append(array.array('c', line))
             if ROBOT in line:
                 x = line.index(ROBOT)
                 robot = (y, x)
