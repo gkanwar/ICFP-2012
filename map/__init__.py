@@ -1,1 +1,1 @@
-from map import NaiveMap
+from map import NaiveMapState
