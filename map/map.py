@@ -18,7 +18,9 @@ CONTINUE = 0
 class NaiveMapState(object):
     """ This is a map representation that naively makes copies
     of the Whole Damn Map on each state update """
-    def __init__(self, ascii_map, n):
+    def __init__(self, ascii_map):
+        m = len(ascii_map)
+        n = max(len(line) for line in ascii_map)
         self.grid = []
         for y, line in enumerate(reversed(ascii_map)):
             line = line.ljust(n) # pad spaces
@@ -27,6 +29,8 @@ class NaiveMapState(object):
                 x = line.index(ROBOT)
                 robot = (x, y)
         self.robot = robot
+        self.height = m
+        self.width = n
 
     def __getitem__(self, loc):
         (x, y) = loc
@@ -43,6 +47,9 @@ class NaiveMapState(object):
 
     def new(self):
         return copy.deepcopy(self)
+
+    def size(self):
+        return (self.width, self.height)
 
     def __contains__(self, a):
         return any(a in row for row in self.grid)
@@ -64,15 +71,11 @@ class MapSimulator(object):
             ascii_map = lines
             metadata = []
         # parse map
-        m = len(ascii_map)
-        n = max(len(line) for line in ascii_map)
         mapstate = map_cls(ascii_map, n)
         lambdas = 0
         moves = 0
         steps_underwater = 0
         self.state = (mapstate, (lambdas, moves, steps_underwater))
-        self.m = m
-        self.n = n
         # parse metadata
         self.meta = {
             'Water': 0,
@@ -151,8 +154,8 @@ Consecutive moves underwater: {}
         # map update
         mapstate = newmapstate
         newmapstate = mapstate.new()
-        for x in range(self.n):
-            for y in range(self.m):
+        for x in range(self.width):
+            for y in range(self.height):
                 if mapstate[x, y] == ROCK:
                     if y-1 >= 0 and mapstate[x, y-1] == EMPTY:
                         # rock fall
