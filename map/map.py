@@ -34,7 +34,11 @@ class NaiveMap:
         self.n = n
 
     def __str__(self):
-        (grid, robot, lambdas, moves) = self.state
+        return self.pprint(self.state)
+
+    @staticmethod
+    def pprint(state):
+        (grid, robot, lambdas, moves) = state
         ascii_map = '\n'.join(''.join(line) for line in reversed(grid))
         ret = """\
 {}
@@ -141,7 +145,7 @@ Moves made: {}
             self.state = state
 
         if pprint:
-            print self
+            print self.pprint(state)
             if ret != CONTINUE:
                 print 'Mining over, score: {}'.format(score)
 
@@ -155,7 +159,7 @@ Moves made: {}
                 break
 
         if pprint:
-            print self
+            print self.pprint(state)
             if ret != CONTINUE:
                 print 'Mining over, score: {}'.format(score)
 
