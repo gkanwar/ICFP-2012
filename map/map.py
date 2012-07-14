@@ -19,7 +19,7 @@ class NaiveMap:
     of the Whole Damn Map on each step """
 
     def __init__(self, inp):
-        lines = inp.strip().splitlines()
+        lines = inp.rstrip().splitlines()
         if '' in lines: # blank line
             i = lines.index('')
             ascii_map = lines[:i]
