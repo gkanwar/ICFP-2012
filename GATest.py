@@ -8,22 +8,6 @@ from search import dynamicSearch
 #We don't check to make sure all our waypoints are valid.
 #If a waypoint is invalid, it will just cause the creature to get a score of whatever it had when the waypoint search failed.
 
-print "Testing Map!"
-m = NaiveMap("""
-######
-#. *R#
-#  \.#
-#\ * #
-L  .\#
-######
-""".strip('\n'))
-
-print m
-
-print "Testing Search!"
-
-print dynamicSearch( 30, lambda x: x == 0, lambda x: set( [ ( x-1, 1 ), ( x+1, 1 ) ] ), lambda x: x )
-
 class TESTMAP:
 	def __init__( self, robotLocation ):
 		self.robotLocation = robotLocation
@@ -74,10 +58,6 @@ def manhattanDistance( pointA, pointB ):
 	return abs( pointA[0] - pointB[0] ) + abs( pointA[1] - pointB[1] )
 
 print [ map.getRobotLocation() for map in dynamicSearch( TESTMAP( ( 30,30 ) ), makeIsGoal( (0,0) ), neighbors, makeHeuristic( (0,0) ) ) ]
-
-m.transduce('LDRDDUULLLDDL')
-
-print m
 
 print "Testing GA!"
 import numpy
