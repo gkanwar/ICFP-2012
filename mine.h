@@ -2,6 +2,12 @@
  * mine.h
  */
 
+// Various possible commands
+#define NUM_STANDARD_COMMANDS 5
+#define EXTRA_COMMANDS 2
+char standardCommands[NUM_STANDARD_COMMANDS] = {'U', 'D', 'L', 'R', 'W'};
+char extraCommands[EXTRA_COMMANDS] = {'A', 'S'};
+
 class NaiveMineState
 {
     // Constructor
@@ -31,9 +37,9 @@ template<class MineStateType> class MineSimulator
     // Constructor
     MineSimulator(string mineText);
     // Printing
-    void pprint(MineStateType state);
+    void printState(MineStateType state);
     // Control the simulator
-    void step();
-    void transduce();
+    void step(char command);
+    void transduce(char* commands, int numCommands);
 };
 	
