@@ -9,43 +9,37 @@ from search import dynamicSearch
 #If a waypoint is invalid, it will just cause the creature to get a score of whatever it had when the waypoint search fails.
 
 print "Testing Map!"
+m = NaiveMap("""
+######
+#. *R#
+#  \.#
+#\ * #
+L  .\#
+######
+""".strip('\n'))
+
+print m
 
 print "Testing Search!"
 
 print dynamicSearch( 30, lambda x: x == 0, lambda x: set( [ ( x-1, 1 ), ( x+1, 1 ) ] ), lambda x: x )
 
+def neighbors( map ):
+	validCommands = [ 'U', 'D', 'L', 'R' ]
+	for command in validCommands:
+		state, ( status, score ) = map.step( command, state=None, update=False, pprint=False );
+		print NaiveMap.pprint( state ), status, score
+	
+print neighbors( m )
 
-obstacles = set()
-for i in range( -10, 100 ):
-	obstacles.add( ( i, 5 ) )
-	obstacles.add( ( -10, i ) )
+def makeIsGoal( goal ):
+	return lambda map: goal == map.state[2]
 
-def neighbors( point ):
-	(x,y) = point
+m.transduce('LDRDDUULLLDDL')
 
-	canidates = [
-		(x-1, y),
-		(x+1, y),
-		(x, y-1),
-		(x, y+1)
-	]
+print m
 
-	for canidate in canidates:
-		if canidate in obstacles:
-			canidates.remove( canidate )
-
-	return set( [ (point, 1) for point in canidates] )
-
-def manhattanDistance( point ):
-	(x,y) = point
-	return abs(x) + abs(y)
-
-def isGoal( point ):
-	(x,y) = point
-	return ( x == 0 ) and ( y == 0 )
-
-print dynamicSearch( (20,20), isGoal, neighbors, manhattanDistance )
-
+'''
 print "Testing GA!"
 import numpy
 import math
@@ -69,5 +63,6 @@ for run in range(5):
 		g.incrementGeneration()
 	plot( averageFitness )
 show()
+'''
 
  
