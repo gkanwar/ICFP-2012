@@ -22,8 +22,8 @@ class NaiveMap:
         n = max(len(line) for line in ascii_map)
         grid = []
         for y, line in enumerate(reversed(ascii_map)):
-            line = list(line.ljust(n)) # pad spaces
-            grid.append(line)
+            line = line.ljust(n) # pad spaces
+            grid.append(list(line))
             if ROBOT in line:
                 x = line.index(ROBOT)
                 robot = (y, x)
@@ -43,7 +43,7 @@ Moves made: {}
 """.format(ascii_map, lambdas, moves)
         return ret
 
-    def step(self, command, state=None, update=True, verbose=False):
+    def step(self, command, state=None, update=True, pprint=False):
         """ Executes a command, and returns the new state. """
         complete = False
         abort = False
@@ -140,14 +140,25 @@ Moves made: {}
         if update:
             self.state = state
 
+        if pprint:
+            print self
+            if ret != CONTINUE:
+                print 'Mining over, score: {}'.format(score)
+
         return state, (ret, score)
 
-    def transduce(self, commands, state=None, update=True):
+    def transduce(self, commands, state=None, update=True, pprint=False):
         state = state or self.state
         for command in commands:
             state, (ret, score) = self.step(command, state=state, update=update)
             if ret != CONTINUE:
                 break
+
+        if pprint:
+            print self
+            if ret != CONTINUE:
+                print 'Mining over, score: {}'.format(score)
+
         return state, (ret, score)
 
             
