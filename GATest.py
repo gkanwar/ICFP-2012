@@ -1,5 +1,4 @@
-from map import NaiveMap
-from geneticAlgorithm import GeneticAlgorithm
+#from geneticAlgorithm import GeneticAlgorithm
 from search import dynamicSearch
 
 #For simplicity, several desirable features will be left out of this test.
@@ -28,7 +27,7 @@ def neighbors( map ):
 # iff the robot is at the goal position in the
 # map passed in.
 def makeIsGoal( goal ):
-	return lambda map: goal == map.getRobotLocation()
+	return lambda map: goal[0] == map.getRobotLocation()[0] and goal[1] == map.getRobotLocation()[1]
 
 # Returns a function object which will return the
 # manhattan distance between the robot and the
@@ -58,7 +57,7 @@ def manhattanDistance( pointA, pointB ):
 	return abs( pointA[0] - pointB[0] ) + abs( pointA[1] - pointB[1] )
 
 print [ map.getRobotLocation() for map in dynamicSearch( TESTMAP( ( 30,30 ) ), makeIsGoal( (0,0) ), neighbors, makeHeuristic( (0,0) ) ) ]
-
+'''
 print "Testing GA!"
 import numpy
 import math
@@ -82,3 +81,4 @@ for run in range(5):
 		g.incrementGeneration()
 	plot( averageFitness )
 show()
+'''
