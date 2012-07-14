@@ -6,11 +6,16 @@ class NaiveMineState
 {
     // Constructor
     NaiveMineState(string mineText);
-    // Getter and setter
-    char get(pair<int, int> loc);
-    char set(pair<int, int> loc, char value);
-    // Move the robot
-    char move(pair<int, int> loc);
+    // Array access
+    char& operator()(int height, int width);
+    // Getters and setters
+    char getElement(pair<int, int> loc);
+    char setElement(pair<int, int> loc, char value);
+    pair<int, int> getRobot();
+    void setRobot(pair<int, int> loc); // Warning: This will overwrite the element at the robot location
+    int getWidth();
+    int getHeight();
+    // TODO: Add meta data getters
 };
 
 template<class MineStateType>
