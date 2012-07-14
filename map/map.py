@@ -140,7 +140,7 @@ Consecutive moves underwater: {}
                     newgrid[y][x] = OPEN_LIFT
 
         # water
-        water_level = self.meta['Water'] + moves // self.meta['Flooding']
+        water_level = self.meta['Water'] + (moves // self.meta['Flooding'] if self.meta['Flooding'] else 0)
         if robot[0] < water_level:
             steps_underwater += 1
         else:
