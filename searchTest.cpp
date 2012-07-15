@@ -77,5 +77,13 @@ int main ()
 	} catch( int error ) {
 		std::cout<< "A* int search example failed.\n";
 	}
+
+	//Use Dijkstra's Algorithm to do a trivial search.
+	try {
+		print< int >( dijkstraSearch( 30, intSearch::isGoal, intSearch::neighbors ) );
+	} catch( int error ) {
+		std::cout<< "Dijkstra's int search example failed.\n";
+	}
+
 	return 0;
 }

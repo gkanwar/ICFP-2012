@@ -32,8 +32,6 @@ std::vector<Node> dijkstraSearch( Node start, bool (*isGoal)( Node ), std::vecto
 			}
 		}
 
-		std::cout << "current = " << current << "\n";
-
 		openNodes.erase( currentItr );
 		visitedNodes.push_back( current );
 

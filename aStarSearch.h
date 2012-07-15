@@ -35,8 +35,6 @@ std::vector<Node> aStarSearch( Node start, bool (*isGoal)( Node ), std::vector< 
 			}
 		}
 
-		std::cout << "current = " << current << "\n";
-
 		openNodes.erase( currentItr );
 		visitedNodes.push_back( current );
 
