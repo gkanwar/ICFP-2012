@@ -1,14 +1,6 @@
 #ifndef __MINE__
 #define __MINE__
 
-#include <iostream>
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <utility>
-#include <vector>
-#include <iterator>
-
 // Map symbols
 #define EMPTY ' '
 #define EARTH '.'
@@ -46,7 +38,6 @@ public:
 	virtual void setRobot(std::pair<int, int> loc) = 0; // Warning: This will overwrite the element at the robot location
 	virtual void setDoneType(int doneType) = 0;
 	virtual void setDone(bool done) = 0;
-	virtual void setWon( bool won ) = 0;
 	virtual void setMoves(int moves) = 0;
 	virtual void setLambdas(int lambdas) = 0;
 
@@ -94,12 +85,14 @@ public:
 	NaiveMineState(const NaiveMineState& base);
 	NaiveMineState( MineState*& base );
 
+	// Desctructors
+	~NaiveMineState();
+
 	// Setters
 	void setElement(std::pair<int, int> loc, char value);
 	void setRobot(std::pair<int, int> loc); // Warning: This will overwrite the element at the robot location
 	void setDoneType(int doneType);
 	void setDone(bool done);
-	void setWon( bool won );
 	void setMoves(int moves);
 	void setLambdas(int lambdas);
 	
@@ -125,6 +118,5 @@ MineState* stepMineState( MineState* state, char command );
 MineState* transduceMineState( MineState* state, char* commands, int numCommands );
 
 void printMineState( MineState* state );
-	
-#include "mine.cpp"
+
 #endif

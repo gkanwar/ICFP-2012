@@ -1,3 +1,13 @@
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <sstream>
+#include <utility>
+#include <vector>
+#include <iterator>
+
+#include "mine.h"
+
 // Array access (using parens, for convenience)
 char& NaiveMineState::operator()(int height, int width) {
 	return grid[height][width];
@@ -107,6 +117,16 @@ NaiveMineState::NaiveMineState(MineState*& base) {
 	// Initialize the meta variables (TODO)
 }
 
+// Destructors
+NaiveMineState::~NaiveMineState() {
+    // Deallocate the grid memory, everything else handles itself
+    for (int i = 0; i < height; i++)
+    {
+	delete[] grid[i];
+    }
+    delete[] grid;
+}
+
 // Getter and setter functions
 const char& NaiveMineState::getElement(std::pair<int, int> loc) const {
 	return grid[loc.first][loc.second];
@@ -146,10 +166,6 @@ const bool& NaiveMineState::isDone() const {
 
 void NaiveMineState::setDone(bool done) {
 	this->done = done;
-}
-
-void NaiveMineState::setWon(bool won) {
-	//TODO: WTF goes here?
 }
 
 const int& NaiveMineState::getMoves() const {
@@ -206,8 +222,6 @@ MineState* stepMineState(MineState* state, char command) {
 	char newLocObject = (*state)(robotNew.first, robotNew.second);
 
 	// Check target location
-	// TODO: This is not how you write a case statement in C++.
-	// You need breaks, otherwise, all the code is gonna run.
 	switch(newLocObject) {
 		case EMPTY:
 		case EARTH:
@@ -222,6 +236,7 @@ MineState* stepMineState(MineState* state, char command) {
 				newState->setDone(true);
 				newState->setDoneType(WIN);
 			}
+			break;
 		}
 		case ROCK:
 		{
@@ -238,10 +253,12 @@ MineState* stepMineState(MineState* state, char command) {
 			else {
 				moved = false;
 			}
+			break;
 		}
 		default:
 		{
 			moved = false;
+			break;
 		}
 	}
 
@@ -312,7 +329,7 @@ MineState* stepMineState(MineState* state, char command) {
 		&& (*newState)(robotNew.first+1, robotNew.second) == ROCK
 		&& (*state)(robotNew.first+1, robotNew.second) != ROCK
 	) {
-		newState->setWon(false);
+		newState->setDone(true);
 		newState->setDoneType(LOSE);
 	}
 	// TODO: Special end conditions, ex. water
@@ -321,14 +338,22 @@ MineState* stepMineState(MineState* state, char command) {
 }
 
 MineState* transduceMine( MineState* state, char* commands, int numCommands ) {
-	//TODO: Fix memory leak here....
-	for (int i = 0; i < numCommands; i++) {
-		state = stepMineState( state, commands[i] );
-	}
-	return state;
+    MineState* newState;
+
+    for (int i = 0; i < numCommands; i++) {
+	newState = stepMineState( state, commands[i] );
+	delete state;
+	state = newState;
+    }
+    return state;
 }
 
 void printMineState( MineState* state ) {
-	//TODO: Implement
-	std::cout<<"TESTING\n";
+    // Print from bottom to top (since 0,0 is in the bottom left)
+    for (int i = state->getHeight()-1; i >= 0; i--) {
+	for (int j = 0; j < state->getWidth(); j++) {
+	    std::cout << (*state)(i, j);
+	}
+	std::cout << std::endl;
+    }
 }
