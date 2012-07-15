@@ -34,20 +34,21 @@ private:
     bool doneState;
 
 public:
-    // Constructor
+    // Constructors
     NaiveMineState(std::string mineText);
+    NaiveMineState(const NaiveMineState& base);
     // Array access
     char& operator()(int height, int width);
     // Getters and setters
-    char getElement(std::pair<int, int> loc);
-    char setElement(std::pair<int, int> loc, char value);
-    std::pair<int, int> getRobot();
+    const char& getElement(std::pair<int, int> loc) const;
+    void setElement(std::pair<int, int> loc, char value);
+    const std::pair<int, int>& getRobot() const;
     void setRobot(std::pair<int, int> loc); // Warning: This will overwrite the element at the robot location
-    int getWidth();
-    int getHeight();
-    bool isWon();
+    const int& getWidth() const;
+    const int& getHeight() const;
+    const bool& isWon() const;
     void setWon(bool won);
-    bool isDone();
+    const bool& isDone() const;
     void setDone(bool done);
     // TODO: Add meta data getters
 };
@@ -69,7 +70,7 @@ public:
     // Constructor
     MineSimulator(std::string mineText);
     // Printing
-    void printState(MineStateType state);
+    void printState();
     // Control the simulator
     void step(char command);
     void transduce(char* commands, int numCommands);
