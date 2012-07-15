@@ -1,0 +1,7 @@
+Genetic Algorithm
+	*Fix problem @
+		geneticAlgorithm.cpp:35:5: error: no matching function for call to ‘Walk::Walk()’
+		geneticAlgorithm.cpp:51:68: error: no matching function for call to ‘Walk::Walk()’
+
+	*Add way to track the best creature ever.
+
