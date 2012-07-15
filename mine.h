@@ -96,7 +96,7 @@ public:
 	// Desctructors
 	~NaiveMineState();
 
-	// Copy
+	// Copying
 	MineState* copySelf();
 
 	// Setters
