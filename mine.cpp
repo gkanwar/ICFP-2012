@@ -12,6 +12,23 @@
 char& NaiveMineState::operator()(int height, int width) {
 	return grid[height][width];
 }
+// Printing
+std::ostream& operator<<(std::ostream& stream, const MineState& obj) {
+    stream << obj.toString() << std::endl;
+
+    return stream;
+}
+const std::string NaiveMineState::toString() const {
+    std::stringstream stream;
+    for (int i = 0; i < this->height; i++) {
+	for (int j = 0; j < this->width; j++) {
+	    stream << this->grid[i][j];
+	}
+	stream << std::endl;
+    }
+
+    return stream.str();
+}
 
 // Constructors
 NaiveMineState::NaiveMineState( std::string ascii_mine ) {
@@ -346,14 +363,4 @@ MineState* transduceMine( MineState* state, char* commands, int numCommands ) {
 	state = newState;
     }
     return state;
-}
-
-void printMineState( MineState* state ) {
-    // Print from bottom to top (since 0,0 is in the bottom left)
-    for (int i = state->getHeight()-1; i >= 0; i--) {
-	for (int j = 0; j < state->getWidth(); j++) {
-	    std::cout << (*state)(i, j);
-	}
-	std::cout << std::endl;
-    }
 }

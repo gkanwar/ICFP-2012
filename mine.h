@@ -32,6 +32,9 @@ class MineState {
 public:
 	// Array access
 	virtual char& operator()(int height, int width) = 0;
+	// Printing
+	virtual const std::string toString() const = 0;
+	friend std::ostream& operator<<(std::ostream& stream, const MineState& obj);
 
 	//Virtual Setters
 	virtual void setElement(std::pair<int, int> loc, char value) = 0;
@@ -77,8 +80,10 @@ private:
 	int lambdas;
 
 public:
-
+	// Array access
 	char& operator()(int height, int width);
+	// Printing
+	const std::string toString() const;
 
 	// Constructors
 	NaiveMineState(std::string mineText);
@@ -116,7 +121,5 @@ public:
 MineState* stepMineState( MineState* state, char command );
 
 MineState* transduceMineState( MineState* state, char* commands, int numCommands );
-
-void printMineState( MineState* state );
 
 #endif
