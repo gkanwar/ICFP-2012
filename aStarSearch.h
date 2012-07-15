@@ -2,18 +2,6 @@
 #define __A_STAR_SEARCH__
 
 template <class Node>
-struct Edge {
-	Node target;
-	float cost;
-	Edge( Node target, float cost ) {
-		this->target = target;
-		this->cost = cost;
-	}
-};
-
-#include <algorithm>
-
-template <class Node>
 std::vector<Node> aStarSearch( Node start, bool (*isGoal)( Node ), std::vector< Edge< Node > > (*neighbors)( Node ),  float (*heuristic)( Node ) ) {
 
 	// Set of nodes we're still looking at.
