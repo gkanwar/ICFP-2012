@@ -81,6 +81,7 @@ private:
 	int doneType;
 	int moves;
 	int lambdas;
+	int stepsUnderwater;
 
 public:
 	// Array access
@@ -106,6 +107,12 @@ public:
 	void setDone(bool done);
 	void setMoves(int moves);
 	void setLambdas(int lambdas);
+	void setStepsUnderwater(int steps);
+
+	// Incrementers
+	void incrementMoves();
+	void incrementLambdas();
+	void incrementStepsUnderwater();
 	
 	//***Getters***//
 
@@ -117,10 +124,12 @@ public:
 
 	// Non-Transient Map Properties
 	int getScore();
+	int getWaterLevel();
 	const bool& isDone() const;
 	const int& getDoneType() const;
 	const int& getMoves() const;
 	const int& getLambdas() const;
+	const int& getStepsUnderwater() const;
 	// TODO: Add meta data getters
 };
 

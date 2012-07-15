@@ -43,6 +43,7 @@ NaiveMineState::NaiveMineState(std::string mineText) {
 	doneType = -1;
 	moves = 0;
 	lambdas = 0;
+	stepsUnderwater = 0;
 
 	// Interpret the input as a grid
 	std::stringstream ss(mineText);
@@ -105,6 +106,7 @@ NaiveMineState::NaiveMineState(const NaiveMineState& base) {
 	this->doneType = base.getDoneType();
 	this->moves = base.getMoves();
 	this->lambdas = base.getLambdas();
+	this->stepsUnderwater = base.getStepsUnderwater();
 
 	// Initialze the grid
 	this->grid = new char*[height];
@@ -206,12 +208,32 @@ void NaiveMineState::setMoves(int moves) {
 	this->moves = moves;
 }
 
+void NaiveMineState::incrementMoves() {
+	this->moves++;
+}
+
 const int& NaiveMineState::getLambdas() const {
 	return lambdas;
 }
 
 void NaiveMineState::setLambdas(int lambdas) {
+	this->lambdas = lambdas;
+}
+
+void NaiveMineState::incrementLambdas() {
 	this->lambdas++;
+}
+
+const int& NaiveMineState::getStepsUnderwater() const {
+	return stepsUnderwater;
+}
+
+void NaiveMineState::setStepsUnderwater(int steps) {
+	this->stepsUnderwater = steps;
+}
+
+void NaiveMineState::incrementStepsUnderwater() {
+	this->stepsUnderwater++;
 }
 
 int NaiveMineState::getScore() {
@@ -224,6 +246,14 @@ int NaiveMineState::getScore() {
 	else if (doneType == WIN) {
 		score += lambdas*50;
 	}
+}
+
+int NaiveMineState::getWaterLevel() {
+	int waterLevel = water;
+	if (flooding != 0) {
+		waterLevel += moves/flooding;
+	}
+	return waterLevel;
 }
 
 MineState* stepMineState(MineState* state, char command) {
@@ -270,7 +300,7 @@ MineState* stepMineState(MineState* state, char command) {
 			newState->setRobot(robotNew);		    
 			state->setRobot(robotNew);
 			if (newLocObject == LAMBDA) {
-				newState->setLambdas(newState->getLambdas()+1);
+				newState->incrementLambdas();
 			}
 			else if (newLocObject == OPEN_LIFT) {
 				newState->setDone(true);
@@ -313,7 +343,7 @@ MineState* stepMineState(MineState* state, char command) {
 		newState->setDoneType(ABORT);
 	}
 	else {
-		newState->setMoves(newState->getMoves()+1);
+		newState->incrementMoves();
 	}
 	std::cout << "Updated moves, moved: " << moved << std::endl;
 
@@ -367,7 +397,13 @@ MineState* stepMineState(MineState* state, char command) {
 		(*newState)(closedLiftCoords.first, closedLiftCoords.second) = OPEN_LIFT;
 	}
 
-	// TODO: Water
+	// Water
+	if (newState->getHeight() < newState->getWaterLevel()) {
+	  newState->incrementStepsUnderwater();
+	}
+	else {
+	  newState->setStepsUnderwater(0);
+	}
 
 	// Ending conditions
 	robotNew = newState->getRobot();
@@ -379,7 +415,11 @@ MineState* stepMineState(MineState* state, char command) {
 		newState->setDone(true);
 		newState->setDoneType(LOSE);
 	}
-	// TODO: Special end conditions, ex. water
+
+	if (newState->getStepsUnderwater() > newState->waterproof) {
+		newState->setDone(true);
+		newState->setDoneType(LOSE);
+	}
 	
 	return newState;
 }
