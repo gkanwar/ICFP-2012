@@ -8,9 +8,14 @@
 
 #include "mine.h"
 
+// Various possible commands
+char standardCommands[NUM_STANDARD_COMMANDS] = {'U', 'D', 'L', 'R', 'W'};
+char extraCommands[EXTRA_COMMANDS] = {'A', 'S'};
+
+
 // Array access (using parens, for convenience)
 char& NaiveMineState::operator()(int height, int width) {
-	return grid[height][width];
+	return grid[this->height-height-1][width];
 }
 // Printing
 std::ostream& operator<<(std::ostream& stream, const MineState& obj) {
@@ -20,6 +25,7 @@ std::ostream& operator<<(std::ostream& stream, const MineState& obj) {
 }
 const std::string NaiveMineState::toString() const {
     std::stringstream stream;
+    stream << "Dimensions: " << this->height << ", " << this->width << std::endl;
     for (int i = 0; i < this->height; i++) {
 	for (int j = 0; j < this->width; j++) {
 	    stream << this->grid[i][j];
@@ -31,7 +37,7 @@ const std::string NaiveMineState::toString() const {
 }
 
 // Constructors
-NaiveMineState::NaiveMineState( std::string ascii_mine ) {
+NaiveMineState::NaiveMineState(std::string mineText) {
 	// Initialize variables
 	done = false;
 	doneType = -1;
@@ -39,9 +45,9 @@ NaiveMineState::NaiveMineState( std::string ascii_mine ) {
 	lambdas = 0;
 
 	// Interpret the input as a grid
-	std::stringstream ss(ascii_mine);
+	std::stringstream ss(mineText);
 	std::vector<std::string> lines;
-	int maxLen;
+	int maxLen = 0;
 	while (!ss.eof()) {
 		std::string temp;
 		getline(ss, temp);
@@ -73,7 +79,7 @@ NaiveMineState::NaiveMineState( std::string ascii_mine ) {
 			}
 			// ... or look for the robot
 			else if (grid[i][j] == 'R') {
-				robot.first = i;
+				robot.first = height-i-1;
 				robot.second = j;
 			}
 		}
@@ -112,7 +118,7 @@ NaiveMineState::NaiveMineState(const NaiveMineState& base) {
 	// Initialize the meta variables (TODO)
 }
 
-NaiveMineState::NaiveMineState(MineState*& base) {
+NaiveMineState::NaiveMineState(const MineState*& base) {
 	// Initialize the variables
 	this->height = base->getHeight();
 	this->width = base->getWidth();
@@ -144,6 +150,11 @@ NaiveMineState::~NaiveMineState() {
     delete[] grid;
 }
 
+// Copying
+MineState* NaiveMineState::copySelf() {
+    return new NaiveMineState((*this));
+}
+
 // Getter and setter functions
 const char& NaiveMineState::getElement(std::pair<int, int> loc) const {
 	return grid[loc.first][loc.second];
@@ -158,7 +169,9 @@ const std::pair<int, int>& NaiveMineState::getRobot() const {
 }
 
 void NaiveMineState::setRobot(std::pair<int, int> loc) {
-	robot = loc;
+    (*this)(robot.first, robot.second) = EMPTY;
+    (*this)(loc.first, loc.second) = ROBOT;
+    robot = loc;
 }
 
 const int& NaiveMineState::getWidth() const {
@@ -215,10 +228,16 @@ int NaiveMineState::getScore() {
 
 MineState* stepMineState(MineState* state, char command) {
 	// Copy the old state
-	MineState* newState = new NaiveMineState( state );
+	MineState* newState = state->copySelf();
+	std::cout << "Copied old state" << std::endl;
+
+	// Check for done
+	if (state->isDone()) {
+	    return newState;
+	}
 
 	// Set some flags
-	bool moved = false;
+	bool moved = true;
 	bool abort = false;
 
 	// Robot movement
@@ -235,8 +254,10 @@ MineState* stepMineState(MineState* state, char command) {
 	else if (command == 'D') {
 		robotNew.first--;
 	}
+	std::cout << "Got robot movement, newloc: " << robotNew.first << "," << robotNew.second << std::endl;
 	
 	char newLocObject = (*state)(robotNew.first, robotNew.second);
+	std::cout << "Got new location object: (" << newLocObject << ")" << std::endl;
 
 	// Check target location
 	switch(newLocObject) {
@@ -278,6 +299,7 @@ MineState* stepMineState(MineState* state, char command) {
 			break;
 		}
 	}
+	std::cout << "Checked target location" << std::endl;
 
 	// Check for the abort command, otherwise update moves
 	if (command == 'A') {
@@ -287,13 +309,14 @@ MineState* stepMineState(MineState* state, char command) {
 	else {
 		newState->setMoves(newState->getMoves()+1);
 	}
+	std::cout << "Updated moves, moved: " << moved << std::endl;
 
 	// Update the map state
 	bool sawClosedLift = false;
 	std::pair<int, int> closedLiftCoords;
 	bool sawLambda = false;
 	for (int i = 0; i < state->getHeight(); i++) {
-		for (int j = 0; i < state->getWidth(); j++) {
+		for (int j = 0; j < state->getWidth(); j++) {
 			if ((*state)(i, j) == ROCK) {
 				if (i-1 >= 0 && (*state)(i-1, j) == EMPTY) {
 					// Rock falls
@@ -331,6 +354,7 @@ MineState* stepMineState(MineState* state, char command) {
 			}
 		}
 	}
+	std::cout << "Updated map state" << std::endl;
 
 	// Check if lift opens
 	if (sawClosedLift && !sawLambda) {
@@ -354,13 +378,26 @@ MineState* stepMineState(MineState* state, char command) {
 	return newState;
 }
 
-MineState* transduceMine( MineState* state, char* commands, int numCommands ) {
+MineState* transduceMineState(MineState* state, std::string commands) {
+    return transduceMineState(state, commands, false, 0.0f);
+}
+MineState* transduceMineState(MineState* state, std::string commands, bool print) {
+    return transduceMineState(state, commands, print, 0.0f);
+}
+MineState* transduceMineState(MineState* state, std::string commands, bool print, float delay) {
+    MineState* stateCopy = state->copySelf();
     MineState* newState;
+    int numCommands = commands.size();
 
     for (int i = 0; i < numCommands; i++) {
-	newState = stepMineState( state, commands[i] );
-	delete state;
-	state = newState;
+	newState = stepMineState( stateCopy, commands[i] );
+	delete stateCopy;
+	stateCopy = newState;
+
+	if (print) {
+	    std::cout << (*newState) << std::endl;
+	    usleep(1000000*delay);
+	}
     }
-    return state;
+    return newState;
 }

@@ -15,8 +15,8 @@
 // Various possible commands
 #define NUM_STANDARD_COMMANDS 5
 #define EXTRA_COMMANDS 2
-char standardCommands[NUM_STANDARD_COMMANDS] = {'U', 'D', 'L', 'R', 'W'};
-char extraCommands[EXTRA_COMMANDS] = {'A', 'S'};
+extern char standardCommands[NUM_STANDARD_COMMANDS];
+extern char extraCommands[EXTRA_COMMANDS];
 
 // Map states
 #define ABORT 1
@@ -35,6 +35,9 @@ public:
 	// Printing
 	virtual const std::string toString() const = 0;
 	friend std::ostream& operator<<(std::ostream& stream, const MineState& obj);
+
+	// Copying
+	virtual MineState* copySelf() = 0;
 
 	//Virtual Setters
 	virtual void setElement(std::pair<int, int> loc, char value) = 0;
@@ -88,10 +91,13 @@ public:
 	// Constructors
 	NaiveMineState(std::string mineText);
 	NaiveMineState(const NaiveMineState& base);
-	NaiveMineState( MineState*& base );
+	NaiveMineState(const MineState*& base);
 
 	// Desctructors
 	~NaiveMineState();
+
+	// Copy
+	MineState* copySelf();
 
 	// Setters
 	void setElement(std::pair<int, int> loc, char value);
@@ -118,8 +124,10 @@ public:
 	// TODO: Add meta data getters
 };
 
-MineState* stepMineState( MineState* state, char command );
+MineState* stepMineState(MineState* state, char command);
 
-MineState* transduceMineState( MineState* state, char* commands, int numCommands );
+MineState* transduceMineState(MineState* state, std::string commands);
+MineState* transduceMineState(MineState* state, std::string commands, bool print);
+MineState* transduceMineState(MineState* state, std::string commands, bool print, float delay);
 
 #endif
