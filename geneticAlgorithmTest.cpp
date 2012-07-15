@@ -17,8 +17,8 @@ float fitness( float bob ) {
 int main ()
 {
     srand ( time(0) );
-    GeneticAlgorithm< float > floatBreeder( fitness, breed, getRandomCreature );
-    for( int i=0; i < 100; i++ ) {
+    GeneticAlgorithm< float > floatBreeder( 1000, fitness, breed, getRandomCreature );
+    for( int i=0; i < 500; i++ ) {
         std::cout<< floatBreeder.incrementGeneration() << "\n";
     }
     return 0;

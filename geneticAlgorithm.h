@@ -18,7 +18,7 @@ private:
     Creature* population;
     std::vector<Creature*> fossilRecord;
 public:
-    GeneticAlgorithm( float (*fitness)( Creature ), Creature (*breed)( Creature, Creature ),  Creature (*getRandomCreature)() );
+    GeneticAlgorithm( int, float (*fitness)( Creature ), Creature (*breed)( Creature, Creature ),  Creature (*getRandomCreature)() );
     float incrementGeneration();
 };
 

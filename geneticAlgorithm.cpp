@@ -26,12 +26,12 @@ int weightedChoice( std::vector< float > weights ) {
 }
 
 template <class Creature>
-GeneticAlgorithm<Creature>::GeneticAlgorithm( float (*fitness)( Creature ), Creature (*breed)( Creature, Creature ),  Creature (*getRandomCreature)() ) {
+GeneticAlgorithm<Creature>::GeneticAlgorithm( int populationSize, float (*fitness)( Creature ), Creature (*breed)( Creature, Creature ),  Creature (*getRandomCreature)() ) {
     this->fitness = fitness;
     this->breed = breed;
     this->getRandomCreature = getRandomCreature;
 
-    this->populationSize = 1000;
+    this->populationSize = populationSize;
     this->population = new Creature[ this->populationSize ]();
     for( int index = 0; index < this->populationSize; index ++ ) {
         this->population[ index ] = (*(this->getRandomCreature))();
