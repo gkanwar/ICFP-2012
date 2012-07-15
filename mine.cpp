@@ -13,8 +13,10 @@ using namespace std;
 NaiveMineState::NaiveMineState(string ascii_mine)
 {
     // Initialize variables
-    winState = false;
-    doneState = false;
+    done = false;
+    doneType = -1;
+    moves = 0;
+    lambdas = 0;
 
     // Interpret the input as a grid
     stringstream ss(ascii_mine);
@@ -81,8 +83,10 @@ NaiveMineState::NaiveMineState(const NaiveMineState& base)
     this->height = base.getHeight();
     this->width = base.getWidth();
     this->robot = base.getRobot();
-    this->winState = base.isWon();
-    this->doneState = base.isDone();
+    this->done = base.isDone();
+    this->doneType = base.getDoneType();
+    this->moves = base.getMoves();
+    this->lambdas = base.getLambdas();
 
     // Initialze the grid
     this->grid = new char*[height];
@@ -129,21 +133,51 @@ const int& NaiveMineState::getHeight() const
 {
     return height;
 }
-const bool& NaiveMineState::isWon() const
+const int& NaiveMineState::getDoneType() const
 {
-    return winState;
+    return doneType;
 }
-void NaiveMineState::setWon(bool won)
+void NaiveMineState::setDoneType(int doneType)
 {
-    winState = won;
+    this->doneType = doneType;
 }
 const bool& NaiveMineState::isDone() const
 {
-    return doneState;
+    return done;
 }
 void NaiveMineState::setDone(bool done)
 {
-    doneState = done;
+    this->done = done;
+}
+const int& NaiveMineState::getMoves() const
+{
+    return moves;
+}
+void NaiveMineState::setMoves(int moves)
+{
+    this->moves = moves;
+}
+const int& NaiveMineState::getLambdas() const
+{
+    return lambdas;
+}
+void NaiveMineState::setLambdas(int lambdas)
+{
+    this->lambdas++;
+}
+int NaiveMineState::getScore()
+{
+    // Gets the current score
+    // NOTE: This is only the final score is isDone() returns true
+    int score = lambdas*25 - moves;
+    if (!done || done && doneType == ABORT)
+    {
+	score += lambdas*25;
+    }
+    else if (doneType == WIN)
+    {
+	score += lambdas*50;
+    }
 }
 
 
@@ -153,6 +187,156 @@ MineStateType stepMineState(MineStateType state, char command)
 {
     // Copy the old state
     MineStateType newState(state);
+
+    // Set some flags
+    bool moved = false;
+    bool abort = false;
+
+    // Robot movement
+    pair<int, int> robotNew = state.getRobot();
+    if (command == 'L')
+    {
+	robotNew.second--;
+    }
+    else if (command == 'R')
+    {
+	robotNew.second++;
+    }
+    else if (command == 'U')
+    {
+	robotNew.first++;
+    }
+    else if (command == 'D')
+    {
+	robotNew.first--;
+    }
+    
+    char newLocObject = state(robotNew.first, robotNew.second);
+
+    // Check target location
+    switch(newLocObject)
+    {
+    case EMPTY:
+    case EARTH:
+    case LAMBDA:
+    case OPEN_LIFT:
+    {
+	newState.setRobot(robotNew);
+	if (newLocObject == LAMBDA)
+	{
+	    newState.setLambdas(newState.getLambdas()+1);
+	}
+	else if (newLocObject == OPEN_LIFT)
+	{
+	    newState.setDone(true);
+	    newState.setDoneType(WIN);
+	}
+    }
+    case ROCK:
+    {
+	// WARNING: We should probably check bounds here for safety
+	// (even though maps are wall surrounded)
+	if (command == 'R' && state(robotNew.first, robotNew.second+1) == EMPTY)
+	{
+	    newState(robotNew.first, robotNew.second+1) = ROCK;
+	    newState.setRobot(robotNew);
+	}
+	else if (command == 'L' && state(robotNew.first, robotNew.second-1) == EMPTY)
+	{
+	    newState(robotNew.first, robotNew.second-1) = ROCK;
+	    newState.setRobot(robotNew);
+	}
+	else
+	{
+	    moved = false;
+	}
+    }
+    default:
+    {
+	moved = false;
+    }
+    }
+
+    // Check for the abort command, otherwise update moves
+    if (command == 'A')
+    {
+	newState.setDone(true);
+	newState.setDoneType(ABORT);
+    }
+    else
+    {
+	newState.setMoves(newState.getMoves()+1);
+    }
+
+    // Update the map state
+    bool sawClosedLift = false;
+    pair<int, int> closedLiftCoords;
+    bool sawLambda = false;
+    for (int i = 0; i < state.getHeight(); i++)
+    {
+	for (int j = 0; i < state.getWidth(); j++)
+	{
+	    if (state(i, j) == ROCK)
+	    {
+		if (i-1 >= 0 && state(i-1, j) == EMPTY)
+		{
+		    // Rock falls
+		    newState(i, j) = EMPTY;
+		    newState(i-1, j) = ROCK;
+		}
+		else if (i-1 >= 0 && state(i-1, j) == ROCK)
+		{
+		    if (state(i, j+1) == EMPTY && state(i-1, j+1) == EMPTY)
+		    {
+			// Rock rolls right
+			newState(i, j) = EMPTY;
+			newState(i-1, j+1) = ROCK;
+		    }
+		    else if (state(i, j-1) == EMPTY && state(i-1, j-1) == EMPTY)
+		    {
+			// Rock rolls left
+			newState(i, j) = EMPTY;
+			newState(i-1, j-1) = ROCK;
+		    }
+		}
+		else if (i-1 >= 0 && state(i-1, j) == LAMBDA)
+		{
+		    if (j+1 < state.getWidth() && state(i, j+1) == EMPTY && state(i-1, j+1) == EMPTY)
+		    {
+			// Rock rolls right
+			newState(i, j) = EMPTY;
+			newState(i-1, j+1) = ROCK;
+		    }
+		}
+	    }
+	    else if (state(i, j) == LAMBDA)
+	    {
+		sawLambda = true;
+	    }
+	    else if (state(i, j) == CLOSED_LIFT)
+	    {
+		sawClosedLift = true;
+		closedLiftCoords = pair<int, int>(i, j);
+	    }
+	}
+    }
+
+    // Check if lift opens
+    if (sawClosedLift && !sawLambda)
+    {
+	newState(closedLiftCoords.first, closedLiftCoords.second) = OPEN_LIFT;
+    }
+
+    // TODO: Water
+
+    // Ending conditions
+    robotNew = newState.getRobot();
+    if (robotNew.first+1 < newState.getHeight() && newState(robotNew.first+1, robotNew.second) == ROCK && state(robotNew.first+1, robotNew.second) != ROCK)
+    {
+	newState.setWon(false);
+	newState.setDoneType(LOSE);
+    }
+    // TODO: Special end conditions, ex. water
     
     return newState;
 }

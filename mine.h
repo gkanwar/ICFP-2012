@@ -7,11 +7,27 @@
 
 #include <string>
 
+// Map symbols
+#define EMPTY ' '
+#define EARTH '.'
+#define LAMBDA '\\'
+#define OPEN_LIFT 'O'
+#define CLOSED_LIFT 'L'
+#define ROCK '*'
+#define ROBOT 'R'
+#define WALL '#'
+// TODO: Special symbols
+
 // Various possible commands
 #define NUM_STANDARD_COMMANDS 5
 #define EXTRA_COMMANDS 2
 char standardCommands[NUM_STANDARD_COMMANDS] = {'U', 'D', 'L', 'R', 'W'};
 char extraCommands[EXTRA_COMMANDS] = {'A', 'S'};
+
+// Map states
+#define ABORT 1
+#define LOSE 2
+#define WIN 3
 
 // This is a map representation that naively makes copies
 // of the Whole Damn Map on each state update.
@@ -30,8 +46,10 @@ private:
     // TODO: Add in the new meta data
 
     // State data
-    bool winState;
-    bool doneState;
+    bool done;
+    int doneType;
+    int moves;
+    int lambdas;
 
 public:
     // Constructors
@@ -46,11 +64,18 @@ public:
     void setRobot(std::pair<int, int> loc); // Warning: This will overwrite the element at the robot location
     const int& getWidth() const;
     const int& getHeight() const;
-    const bool& isWon() const;
-    void setWon(bool won);
+    const int& getDoneType() const;
+    void setDoneType(int doneType);
     const bool& isDone() const;
     void setDone(bool done);
+    const int& getMoves() const;
+    void setMoves(int moves);
+    const int& getLambdas() const;
+    void setLambdas(int lambdas);
     // TODO: Add meta data getters
+
+    // Calculate the score based on state
+    int getScore();
 };
 
 // Mine state functions
