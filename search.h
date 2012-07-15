@@ -31,6 +31,7 @@ struct Edge {
 template <class Node>
 std::vector<Node> reconstructPath( Node start, Node end, std::map<Node, Node> pathMap );
 
+#include "dijkstraSearch.h"
 #include "aStarSearch.h"
 
 #include "search.cpp"
