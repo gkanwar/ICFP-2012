@@ -18,8 +18,8 @@ void print( std::vector< T > v ) {
 };
 
 namespace intSearch {
-	bool isGoal( int node ) {
-		return node == 0;
+	bool equals( int node1, int node2 ) {
+		return node1 == node2;
 	}
 
 	std::vector< Edge< int > > neighbors( int node ) {
@@ -31,8 +31,8 @@ namespace intSearch {
 		return 	frontier;
 	}
 
-	float heuristic( int node ) {
-		return std::abs( node );
+	float heuristic( int node, int goal ) {
+		return std::abs( node - goal );
 	}
 }
 
@@ -73,14 +73,14 @@ int main ()
 {
 	//Use A* to do a trivial search.
 	try {
-		print< int >( aStarSearch( 30, intSearch::isGoal, intSearch::neighbors, intSearch::heuristic ) );
+		print< int >( aStarSearch( 30, 0, intSearch::equals, intSearch::neighbors, intSearch::heuristic ) );
 	} catch( int error ) {
 		std::cout<< "A* int search example failed.\n";
 	}
 
 	//Use Dijkstra's Algorithm to do a trivial search.
 	try {
-		print< int >( dijkstraSearch( 30, intSearch::isGoal, intSearch::neighbors ) );
+		print< int >( dijkstraSearch( 30, 0, intSearch::equals, intSearch::neighbors ) );
 	} catch( int error ) {
 		std::cout<< "Dijkstra's int search example failed.\n";
 	}

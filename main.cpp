@@ -54,10 +54,11 @@ Walk randomWalk( std::pair< int, int > start, int height, int width, int walkLen
 	return walk;
 };
 
+// Just a tad hacky.
 namespace planeSearch {
-	#define GOAL std::pair<int, int>( 0, 0 )
-	bool isGoal( std::pair<int, int> node ) {
-		return ( node.first == GOAL.first && node.second == GOAL.second );
+
+	bool equals( std::pair<int, int> node1, std::pair<int, int> node2 ) {
+		return ( node1.first == node2.first && node1.second == node2.second );
 	}
 
 	std::vector< Edge< std::pair<int, int> > > neighbors( std::pair<int, int> node ) {
@@ -67,12 +68,12 @@ namespace planeSearch {
 		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first - 1, node.second ), 1 ) );
 		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first, node.second + 1 ), 1 ) );
 		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first, node.second - 1 ), 1 ) );
-		
+	
 		return 	frontier;
 	};
 
-	float heuristic( std::pair<int, int> node ) {
-		return manhattanDistance( node, GOAL );
+	float heuristic( std::pair<int, int> node, std::pair<int, int> goal ) {
+		return manhattanDistance( node, goal );
 	};
 }
 
@@ -116,13 +117,13 @@ int main ()
 	srand ( time(0) );
 
 	GeneticAlgorithm< Walk > breeder( 1000, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
-	for( int i=0; i < 500; i++ ) {
+	for( int i=0; i < 100; i++ ) {
 		std::cout<< breeder.incrementGeneration() << "\n";
 	}
 
 	//Use A* to do a trivial search.
 	try {
-		print< std::pair< int, int > >( aStarSearch( std::pair<int, int>( 30, 30 ), planeSearch::isGoal, planeSearch::neighbors, planeSearch::heuristic ) );
+		print< std::pair< int, int > >( aStarSearch( std::pair<int, int>( 30, 30 ), std::pair<int, int>( 0, 0 ), planeSearch::equals, planeSearch::neighbors, planeSearch::heuristic ) );
 	} catch( int error ) {
 		std::cout<< "A* int search example failed.\n";
 	}
