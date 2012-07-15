@@ -12,33 +12,17 @@ void print( std::vector< T > v ) {
                 ++itr
 	)
 	{
-	    std::cout << *itr << ", ";
+	    std::cout << (*itr).first << " " << (*itr).second << ", ";
 	}
 	std::cout<<"\n";
 };
 
-namespace intSearch {
-	bool isGoal( int node ) {
-		return node == 0;
-	}
-
-	std::vector< Edge< int > > neighbors( int node ) {
-		std::vector< Edge< int > > frontier;
-
-		frontier.push_back( Edge< int >( node + 1, 1 ) );
-		frontier.push_back( Edge< int >( node - 1, 1 ) );
-
-		return 	frontier;
-	}
-
-	float heuristic( int node ) {
-		return std::abs( node );
-	}
-}
-
-
 std::pair< int, int > randomPoint( int height, int width ) {
 	return std::pair< int, int >( rand() % height, rand() % width );
+}
+
+int manhattanDistance( std::pair<int, int> pointA, std::pair<int, int> pointB ) {
+	return std::abs( pointA.first - pointB.first ) + std::abs( pointA.second - pointB.second );
 }
 
 class Walk {
@@ -69,6 +53,28 @@ Walk randomWalk( std::pair< int, int > start, int height, int width, int walkLen
 	}
 	return walk;
 };
+
+namespace planeSearch {
+	#define GOAL std::pair<int, int>( 0, 0 )
+	bool isGoal( std::pair<int, int> node ) {
+		return ( node.first == GOAL.first && node.second == GOAL.second );
+	}
+
+	std::vector< Edge< std::pair<int, int> > > neighbors( std::pair<int, int> node ) {
+		std::vector< Edge< std::pair<int, int> > > frontier;
+
+		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first + 1, node.second ), 1 ) );
+		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first - 1, node.second ), 1 ) );
+		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first, node.second + 1 ), 1 ) );
+		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first, node.second - 1 ), 1 ) );
+		
+		return 	frontier;
+	};
+
+	float heuristic( std::pair<int, int> node ) {
+		return manhattanDistance( node, GOAL );
+	};
+}
 
 namespace walkBreeder {
 	//TODO: Make these dynamic
@@ -116,17 +122,11 @@ int main ()
 
 	//Use A* to do a trivial search.
 	try {
-		print< int >( aStarSearch( 30, intSearch::isGoal, intSearch::neighbors, intSearch::heuristic ) );
+		print< std::pair< int, int > >( aStarSearch( std::pair<int, int>( 30, 30 ), planeSearch::isGoal, planeSearch::neighbors, planeSearch::heuristic ) );
 	} catch( int error ) {
 		std::cout<< "A* int search example failed.\n";
 	}
 
-	//Use Dijkstra's Algorithm to do a trivial search.
-	try {
-		print< int >( dijkstraSearch( 30, intSearch::isGoal, intSearch::neighbors ) );
-	} catch( int error ) {
-		std::cout<< "Dijkstra's int search example failed.\n";
-	}
 	Walk w = randomWalk( std::pair<int,int>( 0, 0 ), 10, 100, 30 );
 	for( int i = 0; i < w.length(); i++ ) {
 		std::cout<< w[i].first << " " << w[i].second << "\n";
