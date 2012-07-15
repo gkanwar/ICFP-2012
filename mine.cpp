@@ -1,3 +1,8 @@
+// Array access (using parens, for convenience)
+char& NaiveMineState::operator()(int height, int width) {
+	return grid[height][width];
+}
+
 // Constructors
 NaiveMineState::NaiveMineState( std::string ascii_mine ) {
 	// Initialize variables
@@ -57,6 +62,7 @@ NaiveMineState::NaiveMineState( std::string ascii_mine ) {
 		tokenizer >> token >> value;
 	}
 }
+
 NaiveMineState::NaiveMineState(const NaiveMineState& base) {
 	// Initialize the variables
 	this->height = base.getHeight();
@@ -79,9 +85,26 @@ NaiveMineState::NaiveMineState(const NaiveMineState& base) {
 	// Initialize the meta variables (TODO)
 }
 
-// Array access (using parens, for convenience)
-char& NaiveMineState::operator()(int height, int width) {
-	return grid[height][width];
+NaiveMineState::NaiveMineState(MineState*& base) {
+	// Initialize the variables
+	this->height = base->getHeight();
+	this->width = base->getWidth();
+	this->robot = base->getRobot();
+	this->done = base->isDone();
+	this->doneType = base->getDoneType();
+	this->moves = base->getMoves();
+	this->lambdas = base->getLambdas();
+
+	// Initialize the grid
+	this->grid = new char*[height];
+	for (int i = 0; i < height; i++) {
+		this->grid[i] = new char[width];
+		for (int j = 0; j < width; j++) {
+			this->grid[i][j] = base->getElement(std::pair<int, int>(i, j));
+		}
+	}
+
+	// Initialize the meta variables (TODO)
 }
 
 // Getter and setter functions
@@ -125,6 +148,10 @@ void NaiveMineState::setDone(bool done) {
 	this->done = done;
 }
 
+void NaiveMineState::setWon(bool won) {
+	//TODO: WTF goes here?
+}
+
 const int& NaiveMineState::getMoves() const {
 	return moves;
 }
@@ -153,19 +180,16 @@ int NaiveMineState::getScore() {
 	}
 }
 
-
-// Map state functions
-template<class MineStateType>
-MineStateType stepMineState(MineStateType state, char command) {
+MineState* stepMineState(MineState* state, char command) {
 	// Copy the old state
-	MineStateType newState(state);
+	MineState* newState = new NaiveMineState( state );
 
 	// Set some flags
 	bool moved = false;
 	bool abort = false;
 
 	// Robot movement
-	std::pair<int, int> robotNew = state.getRobot();
+	std::pair<int, int> robotNew = state->getRobot();
 	if (command == 'L') {
 		robotNew.second--;
 	}
@@ -179,7 +203,7 @@ MineStateType stepMineState(MineStateType state, char command) {
 		robotNew.first--;
 	}
 	
-	char newLocObject = state(robotNew.first, robotNew.second);
+	char newLocObject = (*state)(robotNew.first, robotNew.second);
 
 	// Check target location
 	// TODO: This is not how you write a case statement in C++.
@@ -190,26 +214,26 @@ MineStateType stepMineState(MineStateType state, char command) {
 		case LAMBDA:
 		case OPEN_LIFT:
 		{
-			newState.setRobot(robotNew);
+			newState->setRobot(robotNew);
 			if (newLocObject == LAMBDA) {
-				newState.setLambdas(newState.getLambdas()+1);
+				newState->setLambdas(newState->getLambdas()+1);
 			}
 			else if (newLocObject == OPEN_LIFT) {
-				newState.setDone(true);
-				newState.setDoneType(WIN);
+				newState->setDone(true);
+				newState->setDoneType(WIN);
 			}
 		}
 		case ROCK:
 		{
 			// WARNING: We should probably check bounds here for safety
 			// (even though maps are wall surrounded)
-			if (command == 'R' && state(robotNew.first, robotNew.second+1) == EMPTY) {
-				newState(robotNew.first, robotNew.second+1) = ROCK;
-				newState.setRobot(robotNew);
+			if (command == 'R' && (*state)(robotNew.first, robotNew.second+1) == EMPTY) {
+				(*newState)(robotNew.first, robotNew.second+1) = ROCK;
+				newState->setRobot(robotNew);
 			}
-			else if (command == 'L' && state(robotNew.first, robotNew.second-1) == EMPTY) {
-				newState(robotNew.first, robotNew.second-1) = ROCK;
-				newState.setRobot(robotNew);
+			else if (command == 'L' && (*state)(robotNew.first, robotNew.second-1) == EMPTY) {
+				(*newState)(robotNew.first, robotNew.second-1) = ROCK;
+				newState->setRobot(robotNew);
 			}
 			else {
 				moved = false;
@@ -223,51 +247,51 @@ MineStateType stepMineState(MineStateType state, char command) {
 
 	// Check for the abort command, otherwise update moves
 	if (command == 'A') {
-		newState.setDone(true);
-		newState.setDoneType(ABORT);
+		newState->setDone(true);
+		newState->setDoneType(ABORT);
 	}
 	else {
-		newState.setMoves(newState.getMoves()+1);
+		newState->setMoves(newState->getMoves()+1);
 	}
 
 	// Update the map state
 	bool sawClosedLift = false;
 	std::pair<int, int> closedLiftCoords;
 	bool sawLambda = false;
-	for (int i = 0; i < state.getHeight(); i++) {
-		for (int j = 0; i < state.getWidth(); j++) {
-			if (state(i, j) == ROCK) {
-				if (i-1 >= 0 && state(i-1, j) == EMPTY) {
+	for (int i = 0; i < state->getHeight(); i++) {
+		for (int j = 0; i < state->getWidth(); j++) {
+			if ((*state)(i, j) == ROCK) {
+				if (i-1 >= 0 && (*state)(i-1, j) == EMPTY) {
 					// Rock falls
-					newState(i, j) = EMPTY;
-					newState(i-1, j) = ROCK;
+					(*newState)(i, j) = EMPTY;
+					(*newState)(i-1, j) = ROCK;
 				}
-				else if (i-1 >= 0 && state(i-1, j) == ROCK) {
-					if (state(i, j+1) == EMPTY && state(i-1, j+1) == EMPTY)
+				else if (i-1 >= 0 && (*state)(i-1, j) == ROCK) {
+					if ((*state)(i, j+1) == EMPTY && (*state)(i-1, j+1) == EMPTY)
+					{
+						// Rock rolls right
+						(*newState)(i, j) = EMPTY;
+						(*newState)(i-1, j+1) = ROCK;
+					}
+					else if ((*state)(i, j-1) == EMPTY && (*state)(i-1, j-1) == EMPTY) {
+						// Rock rolls left
+						(*newState)(i, j) = EMPTY;
+						(*newState)(i-1, j-1) = ROCK;
+					}
+				}
+				else if (i-1 >= 0 && (*state)(i-1, j) == LAMBDA) {
+					if (j+1 < (*state).getWidth() && (*state)(i, j+1) == EMPTY && (*state)(i-1, j+1) == EMPTY)
 					{
 					// Rock rolls right
-					newState(i, j) = EMPTY;
-					newState(i-1, j+1) = ROCK;
-					}
-					else if (state(i, j-1) == EMPTY && state(i-1, j-1) == EMPTY) {
-					// Rock rolls left
-					newState(i, j) = EMPTY;
-					newState(i-1, j-1) = ROCK;
-					}
-				}
-				else if (i-1 >= 0 && state(i-1, j) == LAMBDA) {
-					if (j+1 < state.getWidth() && state(i, j+1) == EMPTY && state(i-1, j+1) == EMPTY)
-					{
-					// Rock rolls right
-					newState(i, j) = EMPTY;
-					newState(i-1, j+1) = ROCK;
+					(*newState)(i, j) = EMPTY;
+					(*newState)(i-1, j+1) = ROCK;
 					}
 				}
 			}
-			else if (state(i, j) == LAMBDA) {
+			else if ((*state)(i, j) == LAMBDA) {
 				sawLambda = true;
 			}
-			else if (state(i, j) == CLOSED_LIFT) {
+			else if ((*state)(i, j) == CLOSED_LIFT) {
 				sawClosedLift = true;
 				closedLiftCoords = std::pair<int, int>(i, j);
 			}
@@ -276,60 +300,35 @@ MineStateType stepMineState(MineStateType state, char command) {
 
 	// Check if lift opens
 	if (sawClosedLift && !sawLambda) {
-		newState(closedLiftCoords.first, closedLiftCoords.second) = OPEN_LIFT;
+		(*newState)(closedLiftCoords.first, closedLiftCoords.second) = OPEN_LIFT;
 	}
 
 	// TODO: Water
 
 	// Ending conditions
-	robotNew = newState.getRobot();
+	robotNew = newState->getRobot();
 	if(
-		robotNew.first+1 < newState.getHeight()
-		&& newState(robotNew.first+1, robotNew.second) == ROCK
-		&& state(robotNew.first+1, robotNew.second) != ROCK
+		robotNew.first+1 < newState->getHeight()
+		&& (*newState)(robotNew.first+1, robotNew.second) == ROCK
+		&& (*state)(robotNew.first+1, robotNew.second) != ROCK
 	) {
-		newState.setWon(false);
-		newState.setDoneType(LOSE);
+		newState->setWon(false);
+		newState->setDoneType(LOSE);
 	}
 	// TODO: Special end conditions, ex. water
 	
 	return newState;
 }
 
-template<class MineStateType>
-MineStateType transduceMineState(MineStateType state, char* commands, int numCommands) {
+MineState* transduceMine( MineState* state, char* commands, int numCommands ) {
+	//TODO: Fix memory leak here....
 	for (int i = 0; i < numCommands; i++) {
-		state = stepMineState<MineStateType>(state, commands[i]);
+		state = stepMineState( state, commands[i] );
 	}
 	return state;
 }
 
-template<class MineStateType>
-void printMineState(MineStateType state) {
-	//TODO: Write this.
+void printMineState( MineState* state ) {
+	//TODO: Implement
 	std::cout<<"TESTING\n";
-}
-
-// Constructor
-template<class MineStateType>
-MineSimulator<MineStateType>::MineSimulator(std::string mapText)
-{
-	mineState = MineStateType(mapText);
-}
-// Printing
-template<class MineStateType>
-void MineSimulator<MineStateType>::printState()
-{
-	printMineState<MineStateType>(mineState);
-}
-// Control the simulator
-template<class MineStateType>
-void MineSimulator<MineStateType>::step(char command)
-{
-	mineState = stepMineState<MineStateType>(mineState, command);
-}
-template<class MineStateType>
-void MineSimulator<MineStateType>::transduce(char* commands, int numCommands)
-{
-	mineState = transduceMineState<MineStateType>(mineState, commands, numCommands);
 }
