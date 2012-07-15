@@ -266,7 +266,9 @@ MineState* stepMineState(MineState* state, char command) {
 		case LAMBDA:
 		case OPEN_LIFT:
 		{
-			newState->setRobot(robotNew);
+			// Update both states, since the robot moves before map is updated
+			newState->setRobot(robotNew);		    
+			state->setRobot(robotNew);
 			if (newLocObject == LAMBDA) {
 				newState->setLambdas(newState->getLambdas()+1);
 			}
@@ -282,11 +284,15 @@ MineState* stepMineState(MineState* state, char command) {
 			// (even though maps are wall surrounded)
 			if (command == 'R' && (*state)(robotNew.first, robotNew.second+1) == EMPTY) {
 				(*newState)(robotNew.first, robotNew.second+1) = ROCK;
+				(*state)(robotNew.first, robotNew.second+1) = ROCK;
 				newState->setRobot(robotNew);
+				state->setRobot(robotNew);
 			}
 			else if (command == 'L' && (*state)(robotNew.first, robotNew.second-1) == EMPTY) {
 				(*newState)(robotNew.first, robotNew.second-1) = ROCK;
+				(*state)(robotNew.first, robotNew.second-1) = ROCK;
 				newState->setRobot(robotNew);
+				state->setRobot(robotNew);
 			}
 			else {
 				moved = false;
