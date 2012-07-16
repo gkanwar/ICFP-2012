@@ -86,7 +86,19 @@ NaiveMineState::NaiveMineState(std::string mineText) {
 		}
 	}
 
+	// default metadata
+	water = 0;
+	flooding = 0;
+	waterproof = 10;
+	for (int i = 0; i < NUM_TRAMPOLINES; i++) {
+		trampolines[i].first = -1;
+		trampolines[i].second = -1;
+	}
+	growth = 25;
+	razors = 0;
+
 	// Read in the special conditions
+	// TODO: actually assign metadata
 	while (!ss.eof()) {
 		std::string temp;
 		getline(ss, temp);
@@ -117,7 +129,13 @@ NaiveMineState::NaiveMineState(const NaiveMineState& base) {
 		}
 	}
 
-	// Initialize the meta variables (TODO)
+	// Initialize the meta variables
+	this->water = base.getWater();
+	this->flooding = base.getFlooding();
+	this->waterproof = base.getWaterproof();
+	this->trampolines = base.getTrampolines();
+	this->growth = base.getGrowth();
+	this->razors = base.getRazors();
 }
 
 NaiveMineState::NaiveMineState(const MineState*& base) {
@@ -129,6 +147,7 @@ NaiveMineState::NaiveMineState(const MineState*& base) {
 	this->doneType = base->getDoneType();
 	this->moves = base->getMoves();
 	this->lambdas = base->getLambdas();
+	this->stepsUnderwater = base->getStepsUnderwater();
 
 	// Initialize the grid
 	this->grid = new char*[height];
@@ -236,6 +255,30 @@ void NaiveMineState::incrementStepsUnderwater() {
 	this->stepsUnderwater++;
 }
 
+int NaiveMineState::getWater() {
+	return water;
+}
+
+int NaiveMineState::getFlooding() {
+	return flooding;
+}
+
+int NaiveMineState::getWaterproof() {
+	return waterproof;
+}
+
+int NaiveMineState::getTrampolines() {
+	return trampolines;
+}
+
+int NaiveMineState::getGrowth() {
+	return growth;
+}
+
+int NaiveMineState::getRazors() {
+	return razors;
+}
+
 int NaiveMineState::getScore() {
 	// Gets the current score
 	// NOTE: This is only the final score is isDone() returns true
@@ -254,6 +297,16 @@ int NaiveMineState::getWaterLevel() {
 		waterLevel += moves/flooding;
 	}
 	return waterLevel;
+}
+
+char NaiveMineState::getTrampolineTarget(char trampoline) {
+	for (int i = 0; i < NUM_TRAMPOLINES; i++) {
+		if (trampolines[i].first == trampoline) {
+			return trampolines[i].second;
+		}
+	}
+	std::cout << "Warning: trampoline not found" << std.endl;
+	return -1;
 }
 
 MineState* stepMineState(MineState* state, char command) {
@@ -308,8 +361,8 @@ MineState* stepMineState(MineState* state, char command) {
 			}
 			break;
 		}
-		case ROCK:
-		{
+	    case ROCK:
+	    {
 			// WARNING: We should probably check bounds here for safety
 			// (even though maps are wall surrounded)
 			if (command == 'R' && (*state)(robotNew.first, robotNew.second+1) == EMPTY) {
@@ -328,6 +381,34 @@ MineState* stepMineState(MineState* state, char command) {
 				moved = false;
 			}
 			break;
+		}
+		// trampolines
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		{
+			char target = state->getTrampolineTarget(newLocObject);
+			for (int i = 0; i < state->getHeight(); i++) {
+				for (int j = 0; j < state->getWidth(); j++) {
+					if ((*state)(i, j) == target) {
+						// teleport the robot
+						robotNew.first = i;
+						robotNew.second = j;
+						newState->setRobot(robotNew);
+						state->setRobot(robotNew);
+					}
+					else if (state->getTrampolineTarget((*state)(i, j)) == target) {
+						// destroy trampoline
+						(*newState)(i, j) = EMPTY;
+					}
+				}
+			}
 		}
 		default:
 		{
@@ -399,10 +480,10 @@ MineState* stepMineState(MineState* state, char command) {
 
 	// Water
 	if (newState->getHeight() < newState->getWaterLevel()) {
-	  newState->incrementStepsUnderwater();
+		newState->incrementStepsUnderwater();
 	}
 	else {
-	  newState->setStepsUnderwater(0);
+		newState->setStepsUnderwater(0);
 	}
 
 	// Ending conditions
