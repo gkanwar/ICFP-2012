@@ -1,10 +1,22 @@
 #include <iostream>
 #include <sstream>
+#include <cstdlib>
+#include <csignal>
 
 #include "geneticAlgorithm.h"
 #include "search.h"
 #include "mine.h"
 #include "mineSearch.h"
+
+// True always, change if need be
+bool shouldContinue = true;
+std::string bestCommands = "UUDDLRLR";
+
+void sigint_handler(int param)
+{
+    std::cout << bestCommands << std::flush;
+    exit(0);
+}
 
 template <class T>
 void print( std::vector< T > v ) {
@@ -246,6 +258,9 @@ int main ()
     // Seed the random number generator.
     srand ( time(0) );
 
+    // Register a signal handler
+    signal(SIGINT, sigint_handler);
+
     // Read in the map
     std::stringstream buffer;
     buffer << std::cin.rdbuf();
@@ -259,16 +274,15 @@ int main ()
     walkBreeder::height = initialMine->getHeight();
     walkBreeder::walkLength = initialMine->getWidth() * initialMine->getHeight();
     GeneticAlgorithm< Walk > breeder(50, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
-    for( int i=0; i < 100; i++ ) {
+    while(shouldContinue) {
 	breeder.incrementGeneration();
-	//std::cout<< breeder.incrementGeneration() << std::endl;
-	//Walk bestCreature = (*breeder.getBestCreature());
-	//std::string commands = getCommandsFromWalk(initialMine, bestCreature);
-	//std::cout << commands << std::endl;
+	Walk bestCreature = (*breeder.getBestCreature());
+	bestCommands = getCommandsFromWalk(initialMine, bestCreature);
     }
+
     Walk bestCreature = (*breeder.getBestCreature());
-    std::string commands = getCommandsFromWalk(initialMine, bestCreature);
-    std::cout << commands << std::endl;
+    std::string bestCommands = getCommandsFromWalk(initialMine, bestCreature);
+    std::cout << bestCommands << std::endl;
 
     /*
     Walk w = randomWalk( std::pair<int,int>( 0, 0 ), 10, 100, 30 );

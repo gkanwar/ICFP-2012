@@ -1,3 +1,4 @@
 #! /bin/bash
 
-g++ main.cpp mine.cpp -o lifter
+cd src
+g++ main.cpp mine.cpp -o ../lifter
