@@ -1,0 +1,18 @@
+Team IDKJava - 96121980
+* Gurtej Kanwar
+* Anthony Lu
+* Will Oursler
+* Gary Wang
+* Tim Yang
+
+
+Summary:
+	Looking at this kind of problem, a human would most likely break down the map into various smaller situations he knew how to solve, or which were easy to solve. Designing a program to follow these principles would have been much more difficult, especially as the new types of materials and effects were discovered throughout the competition. As such, we decided to go with a more general solution -- our idea was that by avoiding any casework at all, our code would be simpler and easier to extend as changes arose. By making use of randomness and many iterations in the form of a genetic algorithm, we were able to to do just that.
+
+The genetic algorithm:
+    Our genetic algorithm was defined generally, to allow for easy variation. It operated on "Creatures", which could be anything we chose them to be. The class GeneticAlgorithm accepted three functions on these creatures -- getRandomCreature, breed, and fitness. The first, getRandomCreature, generated a random creature, which was used to create the initial "population". Breed took two creatures and produced another creature which was effectively the average of the two (with a healthy dose of randomness, to allow the population to vary). Fitness was a scoring function, which was then used in selecting which creatures to breed and advance to the next generation. By iterating generations of selective breeding, the "creatures" progressively get higher and higher scores, which corresponds to a higher final score.
+    When deciding the creature, we had a few options. Ultimately, we went with defining a creature as a sequence of waypoints for the robot to hit on the map. This way affecting earlier waypoints wouldn't change the location of later waypoints (as it would have if we had simply used instruction sequences as creatures). Our breeding function averaged waypoints, adding in randomness. Our fitness function made use of an A* pathfinding algorithm to determine the optimal path between waypoints, and the fitness was the score at the end of traversing all waypoints.
+    It's worth noting that the environment was by no means static, with rocks falling, beards growing, water rising, etc. Because of this, we had to define our A* system to operate on Nodes which were actually a series of MineState objects. Connections between nodes were commands to the robot. Of course, since movement was still grid-based, we were able to use Euclidean distance as a reasonably effective heuristic. The elegance of this system was that our MineState class could then handle all special cases, including ones added as the contest progressed, and our actual algorithm would not be affected at all.
+
+Conclusion:
+	Though our algorithm had a lot of potential, implementing it using C++ (in order to get the speed we needed) instead of a more functional language was painfully slow. In the end, we ran short on time and weren't able to add in optimizations such as representing the MineState in memory as a series of diffs. Our genetic algorithm ran fairly well on smaller maps, but anything that got remotely larger started to eat up a lot of memory, as each MineState stored it's own copy of the grid, and A* created many copies of MineState.
