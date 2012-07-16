@@ -123,7 +123,7 @@ namespace walkBreeder {
 		//std::cout << "path length: " << bob.length() << std::endl;
 		MineState* goal;
 		bool ret;
-		std::vector<MineState*> nodes;
+		std::vector< std::pair<MineState*, char> > nodes;
 		// For each segment of the path...
 		for( int i = 0; i < bob.length() - 1; i++ ) {
 		    //std::cout << i << ", robot: " << state->getRobot().first << "," << state->getRobot().second << std::endl << ", waypoint: " << bob[i+1].first << "," << bob[i+1].second << std::flush;
@@ -156,7 +156,7 @@ namespace walkBreeder {
 		    delete state;
 		    delete goal;
 		    //std::cout << "Got nodes: " << nodes.size() << std::endl << std::flush;
-		    state = nodes[nodes.size()-1];
+		    state = nodes[nodes.size()-1].first;
 		    // Clean up to avoid memory leaks
 		    /*
 		    for (int j = 0; j < nodes.size()-1; j++)
@@ -171,14 +171,24 @@ namespace walkBreeder {
 	}
 
 }
+
+std::string getStringFromCharVector(std::vector<char> input) {
+    std::stringstream ss;
+    for (int i = 0; i < input.size(); i++)
+    {
+	ss << input[i];
+    }
+    return ss.str();
+}
 	
-MineState* transduceMineWithWalk(MineState* initialMine, Walk walk) {
+std::string getCommandsFromWalk(MineState* initialMine, Walk walk) {
     MineState* state = initialMine->copySelf();
     //std::cout << "Checking fitness" << std::endl;
     //std::cout << "path length: " << bob.length() << std::endl;
     MineState* goal;
     bool ret;
-    std::vector<MineState*> nodes;
+    std::vector<char> commands;
+    std::vector< std::pair<MineState*, char> > nodes;
     // For each segment of the path...
     for( int i = 0; i < walk.length() - 1; i++ ) {
 	//std::cout << i << ", robot: " << state->getRobot().first << "," << state->getRobot().second << std::endl << ", waypoint: " << bob[i+1].first << "," << bob[i+1].second << std::flush;
@@ -190,8 +200,9 @@ MineState* transduceMineWithWalk(MineState* initialMine, Walk walk) {
 	{
 	    std::cout << "Goal not free: " << i << "/" << walk.length() << std::endl << std::flush;
 	    delete goal;
+	    delete state;
 	    //std::cout << "...quitting, fitness: " << fitness << std::endl << std::flush;
-	    return state;
+	    return getStringFromCharVector(commands);
 	}
 	//std::cout << "Start: " << std::endl << (*state) << std::endl << std::flush;
 	//std::cout << "Goal: " << bob[i+1].first << "," << bob[i+1].second << std::endl << (*goal) << std::endl << std::flush;
@@ -203,21 +214,29 @@ MineState* transduceMineWithWalk(MineState* initialMine, Walk walk) {
 	{
 	    std::cout << "A* failed" << std::endl;
 	    delete goal;
-	    return state;
+	    delete state;
+	    return getStringFromCharVector(commands);
 	}
 	delete state;
 	delete goal;
+
+	for (int i = 1; i < nodes.size(); i++)
+	{
+	    commands.push_back(nodes[i].second);
+	}
 	//std::cout << "Got nodes: " << nodes.size() << std::endl << std::flush;
-	state = nodes[nodes.size()-1];
+	state = nodes[nodes.size()-1].first;
 	// Clean up to avoid memory leaks
 	/*
 	  for (int j = 0; j < nodes.size()-1; j++)
 	  {
 	  delete nodes[i];
 	  }
-	*/
+	*/    
     }
-    return state;
+    
+
+    return getStringFromCharVector(commands);
 }
 
 int main ()
@@ -240,13 +259,8 @@ int main ()
     for( int i=0; i < 100; i++ ) {
 	std::cout<< breeder.incrementGeneration() << std::endl;
 	Walk bestCreature = (*breeder.getBestCreature());
-	MineState* finalState = transduceMineWithWalk(initialMine, bestCreature);
-	if (finalState != NULL) {
-	    std::cout<< (*finalState) << std::endl;
-	}
-	else {
-	    std::cout << "NULL!" << std::endl;
-	}
+	std::string commands = getCommandsFromWalk(initialMine, bestCreature);
+	std::cout << commands << std::endl;
     }
 
     /*
