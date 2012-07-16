@@ -23,6 +23,9 @@ extern char extraCommands[EXTRA_COMMANDS];
 #define LOSE 2
 #define WIN 3
 
+// Constants for specials
+#define NUM_TRAMPOLINES 9
+
 // Defines a minimal interface for a MineState,
 // without consideration of implementation.
 // Members that can be most efficently calculated
@@ -74,13 +77,16 @@ private:
 	int water;
 	int flooding;
 	int waterproof;
-	// TODO: Add in the new meta data
+	std::pair<char, char> trampolines[NUM_TRAMPOLINES];
+	int growth;
+	int razors;
 
 	// State data
 	bool done;
 	int doneType;
 	int moves;
 	int lambdas;
+	int stepsUnderwater;
 
 public:
 	// Array access
@@ -106,6 +112,12 @@ public:
 	void setDone(bool done);
 	void setMoves(int moves);
 	void setLambdas(int lambdas);
+	void setStepsUnderwater(int steps);
+
+	// Incrementers
+	void incrementMoves();
+	void incrementLambdas();
+	void incrementStepsUnderwater();
 	
 	//***Getters***//
 
@@ -117,11 +129,25 @@ public:
 
 	// Non-Transient Map Properties
 	int getScore();
+	
 	const bool& isDone() const;
 	const int& getDoneType() const;
 	const int& getMoves() const;
 	const int& getLambdas() const;
-	// TODO: Add meta data getters
+	const int& getStepsUnderwater() const;
+
+	// Metadata
+	int getWater();
+	int getFlooding();
+	int getWaterproof();
+	std::pair<char, char>* getTrampolines();
+	int getGrowth();
+	int getRazors();
+
+	// Specials
+	int getWaterLevel();
+	char getTrampolineTarget(char trampoline);
+	
 };
 
 MineState* stepMineState(MineState* state, char command);
