@@ -228,12 +228,11 @@ int NaiveMineState::getScore() {
 
 MineState* stepMineState(MineState* state, char command) {
 	// Copy the old state
-	MineState* newState = state->copySelf();
-	std::cout << "Copied old state" << std::endl;
+	MineState* stateCopy = state->copySelf();
 
 	// Check for done
 	if (state->isDone()) {
-	    return newState;
+	    return stateCopy;
 	}
 
 	// Set some flags
@@ -241,7 +240,7 @@ MineState* stepMineState(MineState* state, char command) {
 	bool abort = false;
 
 	// Robot movement
-	std::pair<int, int> robotNew = state->getRobot();
+	std::pair<int, int> robotNew = stateCopy->getRobot();
 	if (command == 'L') {
 		robotNew.second--;
 	}
@@ -256,7 +255,7 @@ MineState* stepMineState(MineState* state, char command) {
 	}
 	std::cout << "Got robot movement, newloc: " << robotNew.first << "," << robotNew.second << std::endl;
 	
-	char newLocObject = (*state)(robotNew.first, robotNew.second);
+	char newLocObject = (*stateCopy)(robotNew.first, robotNew.second);
 	std::cout << "Got new location object: (" << newLocObject << ")" << std::endl;
 
 	// Check target location
@@ -267,14 +266,13 @@ MineState* stepMineState(MineState* state, char command) {
 		case OPEN_LIFT:
 		{
 			// Update both states, since the robot moves before map is updated
-			newState->setRobot(robotNew);		    
-			state->setRobot(robotNew);
+			stateCopy->setRobot(robotNew);
 			if (newLocObject == LAMBDA) {
-				newState->setLambdas(newState->getLambdas()+1);
+			    stateCopy->setLambdas(stateCopy->getLambdas()+1);
 			}
 			else if (newLocObject == OPEN_LIFT) {
-				newState->setDone(true);
-				newState->setDoneType(WIN);
+			    stateCopy->setDone(true);
+			    stateCopy->setDoneType(WIN);
 			}
 			break;
 		}
@@ -283,16 +281,12 @@ MineState* stepMineState(MineState* state, char command) {
 			// WARNING: We should probably check bounds here for safety
 			// (even though maps are wall surrounded)
 			if (command == 'R' && (*state)(robotNew.first, robotNew.second+1) == EMPTY) {
-				(*newState)(robotNew.first, robotNew.second+1) = ROCK;
-				(*state)(robotNew.first, robotNew.second+1) = ROCK;
-				newState->setRobot(robotNew);
-				state->setRobot(robotNew);
+				(*stateCopy)(robotNew.first, robotNew.second+1) = ROCK;
+				stateCopy->setRobot(robotNew);
 			}
 			else if (command == 'L' && (*state)(robotNew.first, robotNew.second-1) == EMPTY) {
-				(*newState)(robotNew.first, robotNew.second-1) = ROCK;
-				(*state)(robotNew.first, robotNew.second-1) = ROCK;
-				newState->setRobot(robotNew);
-				state->setRobot(robotNew);
+				(*stateCopy)(robotNew.first, robotNew.second-1) = ROCK;
+				stateCopy->setRobot(robotNew);
 			}
 			else {
 				moved = false;
@@ -309,41 +303,44 @@ MineState* stepMineState(MineState* state, char command) {
 
 	// Check for the abort command, otherwise update moves
 	if (command == 'A') {
-		newState->setDone(true);
-		newState->setDoneType(ABORT);
+		stateCopy->setDone(true);
+		stateCopy->setDoneType(ABORT);
 	}
 	else {
-		newState->setMoves(newState->getMoves()+1);
+		stateCopy->setMoves(stateCopy->getMoves()+1);
 	}
 	std::cout << "Updated moves, moved: " << moved << std::endl;
+
+	// Recopy the map to be able to read from old and write to new
+	MineState* newState = stateCopy->copySelf();
 
 	// Update the map state
 	bool sawClosedLift = false;
 	std::pair<int, int> closedLiftCoords;
 	bool sawLambda = false;
-	for (int i = 0; i < state->getHeight(); i++) {
-		for (int j = 0; j < state->getWidth(); j++) {
-			if ((*state)(i, j) == ROCK) {
-				if (i-1 >= 0 && (*state)(i-1, j) == EMPTY) {
+	for (int i = 0; i < stateCopy->getHeight(); i++) {
+		for (int j = 0; j < stateCopy->getWidth(); j++) {
+			if ((*stateCopy)(i, j) == ROCK) {
+				if (i-1 >= 0 && (*stateCopy)(i-1, j) == EMPTY) {
 					// Rock falls
 					(*newState)(i, j) = EMPTY;
 					(*newState)(i-1, j) = ROCK;
 				}
-				else if (i-1 >= 0 && (*state)(i-1, j) == ROCK) {
-					if ((*state)(i, j+1) == EMPTY && (*state)(i-1, j+1) == EMPTY)
+				else if (i-1 >= 0 && (*stateCopy)(i-1, j) == ROCK) {
+					if ((*stateCopy)(i, j+1) == EMPTY && (*stateCopy)(i-1, j+1) == EMPTY)
 					{
 						// Rock rolls right
 						(*newState)(i, j) = EMPTY;
 						(*newState)(i-1, j+1) = ROCK;
 					}
-					else if ((*state)(i, j-1) == EMPTY && (*state)(i-1, j-1) == EMPTY) {
+					else if ((*stateCopy)(i, j-1) == EMPTY && (*stateCopy)(i-1, j-1) == EMPTY) {
 						// Rock rolls left
 						(*newState)(i, j) = EMPTY;
 						(*newState)(i-1, j-1) = ROCK;
 					}
 				}
-				else if (i-1 >= 0 && (*state)(i-1, j) == LAMBDA) {
-					if (j+1 < (*state).getWidth() && (*state)(i, j+1) == EMPTY && (*state)(i-1, j+1) == EMPTY)
+				else if (i-1 >= 0 && (*stateCopy)(i-1, j) == LAMBDA) {
+					if (j+1 < (*stateCopy).getWidth() && (*stateCopy)(i, j+1) == EMPTY && (*stateCopy)(i-1, j+1) == EMPTY)
 					{
 					// Rock rolls right
 					(*newState)(i, j) = EMPTY;
@@ -351,10 +348,10 @@ MineState* stepMineState(MineState* state, char command) {
 					}
 				}
 			}
-			else if ((*state)(i, j) == LAMBDA) {
+			else if ((*stateCopy)(i, j) == LAMBDA) {
 				sawLambda = true;
 			}
-			else if ((*state)(i, j) == CLOSED_LIFT) {
+			else if ((*stateCopy)(i, j) == CLOSED_LIFT) {
 				sawClosedLift = true;
 				closedLiftCoords = std::pair<int, int>(i, j);
 			}
@@ -374,7 +371,7 @@ MineState* stepMineState(MineState* state, char command) {
 	if(
 		robotNew.first+1 < newState->getHeight()
 		&& (*newState)(robotNew.first+1, robotNew.second) == ROCK
-		&& (*state)(robotNew.first+1, robotNew.second) != ROCK
+		&& (*stateCopy)(robotNew.first+1, robotNew.second) != ROCK
 	) {
 		newState->setDone(true);
 		newState->setDoneType(LOSE);
