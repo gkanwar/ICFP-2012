@@ -55,9 +55,9 @@ Walk randomWalk( std::pair< int, int > start, int height, int width, int walkLen
 };
 
 namespace planeSearch {
-	#define GOAL std::pair<int, int>( 0, 0 )
-	bool isGoal( std::pair<int, int> node ) {
-		return ( node.first == GOAL.first && node.second == GOAL.second );
+
+	bool equals( std::pair<int, int> node1, std::pair<int, int> node2 ) {
+		return ( node1.first == node2.first && node1.second == node2.second );
 	}
 
 	std::vector< Edge< std::pair<int, int> > > neighbors( std::pair<int, int> node ) {
@@ -67,16 +67,17 @@ namespace planeSearch {
 		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first - 1, node.second ), 1 ) );
 		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first, node.second + 1 ), 1 ) );
 		frontier.push_back( Edge< std::pair<int, int> >( std::pair<int, int>( node.first, node.second - 1 ), 1 ) );
-		
+	
 		return 	frontier;
 	};
 
-	float heuristic( std::pair<int, int> node ) {
-		return manhattanDistance( node, GOAL );
+	float heuristic( std::pair<int, int> node, std::pair<int, int> goal ) {
+		return manhattanDistance( node, goal );
 	};
 }
 
 namespace walkBreeder {
+
 	//TODO: Make these dynamic
 	#define START std::pair< int, int >( 0, 0 )
 	#define WIDTH 30
@@ -90,23 +91,34 @@ namespace walkBreeder {
 		Walk child( START );
 		//TODO: randomness!
 		for( int index = 1; index < WALKLENGTH; index++ ) {
+			std::pair< int, int > waypoint;
 			if( rand() % 2 ) {
-				child.append( mom[ index ] );
+				waypoint = mom[ index ];
 			}
 			else {
-				child.append( pop[ index ] );
+				waypoint = pop[ index ];
 			}
+
+			//Sprinkle with randomness!
+			// With chance 1 / 50 ....
+			if( rand() % 50 == 0 ) {
+				waypoint.first += ( rand() % 3 - 1 );
+				waypoint.second += ( rand() % 3 - 1 );
+			};
+			child.append( waypoint );
 		}
 		return child;
 	}
 
 	float fitness( Walk bob ) {
 		float fitness = 0;
-		for( int i = 0; i < bob.length(); i++ ) {
-			fitness += bob[i].first + bob[i].second;
+		// For each segment of the path...
+		for( int i = 0; i < bob.length() - 1; i++ ) {
+			fitness += aStarSearch( bob[i], bob[ i + 1 ], planeSearch::equals, planeSearch::neighbors, planeSearch::heuristic ).size();
 		}
-		return fitness;
+		return fitness*fitness; // Give better fitness an extra advantage...
 	}
+
 }
 	
 
@@ -115,16 +127,9 @@ int main ()
 	// Seed the random number generator.
 	srand ( time(0) );
 
-	GeneticAlgorithm< Walk > breeder( 1000, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
-	for( int i=0; i < 500; i++ ) {
+	GeneticAlgorithm< Walk > breeder( 50, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
+	for( int i=0; i < 100; i++ ) {
 		std::cout<< breeder.incrementGeneration() << "\n";
-	}
-
-	//Use A* to do a trivial search.
-	try {
-		print< std::pair< int, int > >( aStarSearch( std::pair<int, int>( 30, 30 ), planeSearch::isGoal, planeSearch::neighbors, planeSearch::heuristic ) );
-	} catch( int error ) {
-		std::cout<< "A* int search example failed.\n";
 	}
 
 	Walk w = randomWalk( std::pair<int,int>( 0, 0 ), 10, 100, 30 );

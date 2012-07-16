@@ -2,7 +2,7 @@
 #define __A_STAR_SEARCH__
 
 template <class Node>
-std::vector<Node> aStarSearch( Node start, bool (*isGoal)( Node ), std::vector< Edge< Node > > (*neighbors)( Node ),  float (*heuristic)( Node ) ) {
+std::vector<Node> aStarSearch( Node start, Node goal, bool (*equals)( Node, Node ), std::vector< Edge< Node > > (*neighbors)( Node ),  float (*heuristic)( Node, Node ) ) {
 
 	// Set of nodes we're still looking at.
 	std::vector< Node > openNodes;
@@ -18,7 +18,7 @@ std::vector<Node> aStarSearch( Node start, bool (*isGoal)( Node ), std::vector< 
 	knownCost[ start ] = 0;
 	// Optimistic estimant of the cost to goal through each explored node.
 	std::map< Node, float > estCost;
-	estCost[ start ] = (*heuristic)( start );
+	estCost[ start ] = (*heuristic)( start, goal );
 
 	while( openNodes.size() > 0 ) {
 
@@ -39,7 +39,7 @@ std::vector<Node> aStarSearch( Node start, bool (*isGoal)( Node ), std::vector< 
 		visitedNodes.push_back( current );
 
 		// Check if we've reached the goal...
-		if( isGoal( current ) ) {
+		if( equals( current, goal ) ) {
 			return reconstructPath<Node>( start, current, pathMap );
 		};
 
@@ -61,7 +61,7 @@ std::vector<Node> aStarSearch( Node start, bool (*isGoal)( Node ), std::vector< 
 				openNodes.push_back( neighbor );
 				pathMap[ neighbor ] = current;
 				knownCost[ neighbor ] = cost + knownCost[ current ];
-				estCost[ neighbor ] = knownCost[ neighbor ] + (*heuristic)( neighbor );
+				estCost[ neighbor ] = knownCost[ neighbor ] + (*heuristic)( neighbor, goal  );
 			}
 		}
 	}
