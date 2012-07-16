@@ -68,3 +68,19 @@ float GeneticAlgorithm<Creature>::incrementGeneration() {
 
     return sumFitness / this->populationSize;
 }
+
+template <class Creature>
+Creature* GeneticAlgorithm<Creature>::getBestCreature()
+{
+    Creature* best;
+    float bestFitness = 0;
+    for( int index = 0; index < this->populationSize; index ++ ) {
+        float fitness = (*(this->fitness))( this->population[ index ] );
+	if (fitness >= bestFitness) {
+	    best = &(this->population[index]);
+	    fitness = bestFitness;
+	}
+    }
+
+    return best;
+}

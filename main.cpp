@@ -172,6 +172,53 @@ namespace walkBreeder {
 
 }
 	
+MineState* transduceMineWithWalk(MineState* initialMine, Walk walk) {
+    MineState* state = initialMine->copySelf();
+    //std::cout << "Checking fitness" << std::endl;
+    //std::cout << "path length: " << bob.length() << std::endl;
+    MineState* goal;
+    bool ret;
+    std::vector<MineState*> nodes;
+    // For each segment of the path...
+    for( int i = 0; i < walk.length() - 1; i++ ) {
+	//std::cout << i << ", robot: " << state->getRobot().first << "," << state->getRobot().second << std::endl << ", waypoint: " << bob[i+1].first << "," << bob[i+1].second << std::flush;
+	goal = state->copySelf();
+	//std::cout << "Made copy -> goal" << std::endl << std::flush;
+	ret = goal->setRobot(walk[i+1]);
+	//std::cout << "Set the robot of goal" << std::endl << std::flush;
+	if (!ret)
+	{
+	    std::cout << "Goal not free: " << i << "/" << walk.length() << std::endl << std::flush;
+	    delete goal;
+	    //std::cout << "...quitting, fitness: " << fitness << std::endl << std::flush;
+	    return state;
+	}
+	//std::cout << "Start: " << std::endl << (*state) << std::endl << std::flush;
+	//std::cout << "Goal: " << bob[i+1].first << "," << bob[i+1].second << std::endl << (*goal) << std::endl << std::flush;
+	try
+	{
+	    nodes = waypointAStar(state, goal);
+	}
+	catch (int error)
+	{
+	    std::cout << "A* failed" << std::endl;
+	    delete goal;
+	    return state;
+	}
+	delete state;
+	delete goal;
+	//std::cout << "Got nodes: " << nodes.size() << std::endl << std::flush;
+	state = nodes[nodes.size()-1];
+	// Clean up to avoid memory leaks
+	/*
+	  for (int j = 0; j < nodes.size()-1; j++)
+	  {
+	  delete nodes[i];
+	  }
+	*/
+    }
+    return state;
+}
 
 int main ()
 {
@@ -191,7 +238,15 @@ int main ()
     walkBreeder::height = initialMine->getHeight();
     GeneticAlgorithm< Walk > breeder(50, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
     for( int i=0; i < 100; i++ ) {
-	std::cout<< breeder.incrementGeneration() << "\n";
+	std::cout<< breeder.incrementGeneration() << std::endl;
+	Walk bestCreature = (*breeder.getBestCreature());
+	MineState* finalState = transduceMineWithWalk(initialMine, bestCreature);
+	if (finalState != NULL) {
+	    std::cout<< (*finalState) << std::endl;
+	}
+	else {
+	    std::cout << "NULL!" << std::endl;
+	}
     }
 
     /*
