@@ -136,7 +136,6 @@ NaiveMineState::NaiveMineState(const NaiveMineState& base) {
 
 NaiveMineState::NaiveMineState(const MineState*& base) {
 	// Initialize the variables
-    std::cout << "Starting copy" << std::endl << std::flush;
 	this->height = base->getHeight();
 	this->width = base->getWidth();
 	this->robot = base->getRobot();
@@ -162,8 +161,6 @@ NaiveMineState::NaiveMineState(const MineState*& base) {
 	this->trampolines = base->getTrampolines();
 	this->growth = base->getGrowth();
 	this->razors = base->getRazors();
-
-	std::cout << "Ending copy" << std::endl << std::flush;
 }
 
 // Destructors
@@ -192,11 +189,6 @@ void NaiveMineState::setElement(std::pair<int, int> loc, char value) {
 
 const std::pair<int, int>& NaiveMineState::getRobot() const {
 	return robot;
-}
-
-bool NaiveMineState::isSpaceMoveable(std::pair<int, int> loc) {
-	char targetObject = (*this)(loc.first, loc.second);
-	return (targetObject == EMPTY || targetObject == EARTH || targetObject == LAMBDA || targetObject == OPEN_LIFT || targetObject == BEARD);
 }
 
 void NaiveMineState::setRobot(std::pair<int, int> loc) {

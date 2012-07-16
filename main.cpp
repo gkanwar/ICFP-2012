@@ -260,11 +260,15 @@ int main ()
     walkBreeder::walkLength = initialMine->getWidth() * initialMine->getHeight();
     GeneticAlgorithm< Walk > breeder(50, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
     for( int i=0; i < 100; i++ ) {
-	std::cout<< breeder.incrementGeneration() << std::endl;
-	Walk bestCreature = (*breeder.getBestCreature());
-	std::string commands = getCommandsFromWalk(initialMine, bestCreature);
-	std::cout << commands << std::endl;
+	breeder.incrementGeneration();
+	//std::cout<< breeder.incrementGeneration() << std::endl;
+	//Walk bestCreature = (*breeder.getBestCreature());
+	//std::string commands = getCommandsFromWalk(initialMine, bestCreature);
+	//std::cout << commands << std::endl;
     }
+    Walk bestCreature = (*breeder.getBestCreature());
+    std::string commands = getCommandsFromWalk(initialMine, bestCreature);
+    std::cout << commands << std::endl;
 
     /*
     Walk w = randomWalk( std::pair<int,int>( 0, 0 ), 10, 100, 30 );

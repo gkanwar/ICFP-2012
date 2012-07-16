@@ -68,8 +68,6 @@ public:
 	virtual const int& getHeight() const = 0;
 	virtual const std::pair<int, int>& getRobot() const = 0;
 
-	virtual bool isSpaceMoveable(std::pair<int, int> loc) = 0;
-
 	// Non-Transient Map Properties
 	virtual int getScore() = 0;
 	virtual const bool& isDone() const = 0;
@@ -192,7 +190,7 @@ MineState* transduceMineState(MineState* state, std::string commands, bool print
 // Check if a space is moveable
 static bool isObjectReachable(char object)
 {
-    return (object == EMPTY || object == EARTH || object == LAMBDA || object == CLOSED_LIFT || object == OPEN_LIFT);
+    return (object == EMPTY || object == EARTH || object == LAMBDA || object == CLOSED_LIFT || object == OPEN_LIFT || object == RAZOR);
 }
 
 #endif
