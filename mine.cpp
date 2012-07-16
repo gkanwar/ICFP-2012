@@ -185,10 +185,17 @@ const std::pair<int, int>& NaiveMineState::getRobot() const {
 	return robot;
 }
 
-void NaiveMineState::setRobot(std::pair<int, int> loc) {
-    (*this)(robot.first, robot.second) = EMPTY;
-    (*this)(loc.first, loc.second) = ROBOT;
-    robot = loc;
+bool NaiveMineState::setRobot(std::pair<int, int> loc) {
+    char targetObject = (*this)(loc.first, loc.second);
+    if (targetObject == EMPTY || targetObject == EARTH || targetObject == LAMBDA || targetObject == OPEN_LIFT)
+    {
+	(*this)(robot.first, robot.second) = EMPTY;
+	(*this)(loc.first, loc.second) = ROBOT;
+	robot = loc;
+	return true;
+    }
+
+    return false;
 }
 
 const int& NaiveMineState::getWidth() const {
@@ -332,10 +339,8 @@ MineState* stepMineState(MineState* state, char command) {
 	else if (command == 'D') {
 		robotNew.first--;
 	}
-	std::cout << "Got robot movement, newloc: " << robotNew.first << "," << robotNew.second << std::endl;
 	
 	char newLocObject = (*stateCopy)(robotNew.first, robotNew.second);
-	std::cout << "Got new location object: (" << newLocObject << ")" << std::endl;
 
 	// Check target location
 	switch(newLocObject) {
@@ -406,7 +411,6 @@ MineState* stepMineState(MineState* state, char command) {
 			break;
 		}
 	}
-	std::cout << "Checked target location" << std::endl;
 
 	// Check for the abort command, otherwise update moves
 	if (command == 'A') {
@@ -416,7 +420,6 @@ MineState* stepMineState(MineState* state, char command) {
 	else {
 		stateCopy->incrementMoves();
 	}
-	std::cout << "Updated moves, moved: " << moved << std::endl;
 
 	// Recopy the map to be able to read from old and write to new
 	MineState* newState = stateCopy->copySelf();
@@ -464,7 +467,6 @@ MineState* stepMineState(MineState* state, char command) {
 			}
 		}
 	}
-	std::cout << "Updated map state" << std::endl;
 
 	// Check if lift opens
 	if (sawClosedLift && !sawLambda) {
