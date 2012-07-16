@@ -196,7 +196,7 @@ const std::pair<int, int>& NaiveMineState::getRobot() const {
 
 bool NaiveMineState::isSpaceMoveable(std::pair<int, int> loc) {
 	char targetObject = (*this)(loc.first, loc.second);
-	return (targetObject == EMPTY || targetObject == EARTH || targetObject == LAMBDA || targetObject == OPEN_LIFT || targetObject == BEARD);
+	return (targetObject == EMPTY || targetObject == EARTH || targetObject == LAMBDA || targetObject == OPEN_LIFT || targetObject == RAZOR);
 }
 
 void NaiveMineState::setRobot(std::pair<int, int> loc) {
