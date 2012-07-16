@@ -1,3 +1,5 @@
+#include <vector>
+
 #ifndef __MINE__
 #define __MINE__
 
@@ -49,6 +51,12 @@ public:
 	virtual void setDone(bool done) = 0;
 	virtual void setMoves(int moves) = 0;
 	virtual void setLambdas(int lambdas) = 0;
+	virtual void setStepsUnderwater(int steps) = 0;
+
+	// Incrementers
+	virtual void incrementMoves();
+	virtual void incrementLambdas();
+	virtual void incrementStepsUnderwater();
 
 	//Virtual Transient Getters
 	virtual const char& getElement(std::pair<int, int> loc) const = 0;
@@ -62,6 +70,20 @@ public:
 	virtual const int& getDoneType() const = 0;
 	virtual const int& getMoves() const = 0;
 	virtual const int& getLambdas() const = 0;
+	virtual const int& getStepsUnderwater() const = 0;
+
+	// Metadata
+	virtual const int& getWater() const;
+	virtual const int& getFlooding() const;
+	virtual const int& getWaterproof() const;
+	virtual const std::vector<std::pair<char, char> > getTrampolines() const;
+	virtual const int& getGrowth() const;
+	virtual const int& getRazors() const;
+
+	// Specials
+	virtual int getWaterLevel();
+	virtual char getTrampolineTarget(char trampoline);
+
 };
 
 // This is a map representation that naively makes copies
@@ -77,7 +99,7 @@ private:
 	int water;
 	int flooding;
 	int waterproof;
-	std::pair<char, char> trampolines[NUM_TRAMPOLINES];
+	std::vector<std::pair<char, char> > trampolines;
 	int growth;
 	int razors;
 
@@ -137,12 +159,12 @@ public:
 	const int& getStepsUnderwater() const;
 
 	// Metadata
-	int getWater();
-	int getFlooding();
-	int getWaterproof();
-	std::pair<char, char>* getTrampolines();
-	int getGrowth();
-	int getRazors();
+	const int& getWater() const;
+	const int& getFlooding() const;
+	const int& getWaterproof() const;
+	const std::vector<std::pair<char, char> > getTrampolines() const;
+	const int& getGrowth() const;
+	const int& getRazors() const;
 
 	// Specials
 	int getWaterLevel();

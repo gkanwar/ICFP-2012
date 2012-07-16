@@ -90,10 +90,6 @@ NaiveMineState::NaiveMineState(std::string mineText) {
 	water = 0;
 	flooding = 0;
 	waterproof = 10;
-	for (int i = 0; i < NUM_TRAMPOLINES; i++) {
-		trampolines[i].first = -1;
-		trampolines[i].second = -1;
-	}
 	growth = 25;
 	razors = 0;
 
@@ -255,27 +251,27 @@ void NaiveMineState::incrementStepsUnderwater() {
 	this->stepsUnderwater++;
 }
 
-int NaiveMineState::getWater() {
+const int& NaiveMineState::getWater() const {
 	return water;
 }
 
-int NaiveMineState::getFlooding() {
+const int& NaiveMineState::getFlooding() const {
 	return flooding;
 }
 
-int NaiveMineState::getWaterproof() {
+const int& NaiveMineState::getWaterproof() const {
 	return waterproof;
 }
 
-int NaiveMineState::getTrampolines() {
+const std::vector<std::pair<char, char> > NaiveMineState::getTrampolines() const {
 	return trampolines;
 }
 
-int NaiveMineState::getGrowth() {
+const int& NaiveMineState::getGrowth() const {
 	return growth;
 }
 
-int NaiveMineState::getRazors() {
+const int& NaiveMineState::getRazors() const {
 	return razors;
 }
 
@@ -300,12 +296,12 @@ int NaiveMineState::getWaterLevel() {
 }
 
 char NaiveMineState::getTrampolineTarget(char trampoline) {
-	for (int i = 0; i < NUM_TRAMPOLINES; i++) {
+	for (int i = 0; i < trampolines.size(); i++) {
 		if (trampolines[i].first == trampoline) {
 			return trampolines[i].second;
 		}
 	}
-	std::cout << "Warning: trampoline not found" << std.endl;
+	std::cout << "Warning: trampoline not found" << std::endl;
 	return -1;
 }
 
@@ -394,12 +390,12 @@ MineState* stepMineState(MineState* state, char command) {
 						// teleport the robot
 						robotNew.first = i;
 						robotNew.second = j;
-						newState->setRobot(robotNew);
+						stateCopy->setRobot(robotNew);
 						state->setRobot(robotNew);
 					}
 					else if (state->getTrampolineTarget((*state)(i, j)) == target) {
 						// destroy trampoline
-						(*newState)(i, j) = EMPTY;
+						(*stateCopy)(i, j) = EMPTY;
 					}
 				}
 			}
@@ -494,7 +490,7 @@ MineState* stepMineState(MineState* state, char command) {
 		newState->setDoneType(LOSE);
 	}
 
-	if (newState->getStepsUnderwater() > newState->waterproof) {
+	if (newState->getStepsUnderwater() > newState->getWaterproof()) {
 		newState->setDone(true);
 		newState->setDoneType(LOSE);
 	}
