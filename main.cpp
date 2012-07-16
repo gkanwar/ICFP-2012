@@ -1,8 +1,10 @@
 #include <iostream>
+#include <sstream>
 
 #include "geneticAlgorithm.h"
 #include "search.h"
 #include "mine.h"
+#include "mineSearch.h"
 
 template <class T>
 void print( std::vector< T > v ) {
@@ -78,19 +80,19 @@ namespace planeSearch {
 
 namespace walkBreeder {
 
-	//TODO: Make these dynamic
-	#define START std::pair< int, int >( 0, 0 )
-	#define WIDTH 30
-	#define HEIGHT 30
-	#define WALKLENGTH 10
+    MineState* start;
+    int width = 30;
+    int height = 30;
+    int walkLength = 10;
+
 	Walk getRandomCreature() {
-		return randomWalk( START, HEIGHT, WIDTH, WALKLENGTH );
+	    return randomWalk(start->getRobot(), height, width, walkLength);
 	}
 
-	Walk breed( Walk mom, Walk pop ) {
-		Walk child( START );
+	Walk breed(Walk mom, Walk pop) {
+	    Walk child(start->getRobot());
 		//TODO: randomness!
-		for( int index = 1; index < WALKLENGTH; index++ ) {
+		for(int index = 1; index < walkLength; index++) {
 			std::pair< int, int > waypoint;
 			if( rand() % 2 ) {
 				waypoint = mom[ index ];
@@ -112,10 +114,52 @@ namespace walkBreeder {
 
 	float fitness( Walk bob ) {
 		float fitness = 0;
+		MineState* state = start->copySelf();
+		std::cout << "Checking fitness" << std::endl;
+		std::cout << "path length: " << bob.length() << std::endl;
 		// For each segment of the path...
 		for( int i = 0; i < bob.length() - 1; i++ ) {
-			fitness += aStarSearch( bob[i], bob[ i + 1 ], planeSearch::equals, planeSearch::neighbors, planeSearch::heuristic ).size();
+		    std::cout << i << std::endl;
+		    MineState* goal = state->copySelf();
+		    std::cout << "Made copy -> goal" << std::endl;
+		    bool ret = goal->setRobot(bob[i+1]);
+		    std::cout << "Set the robot of goal" << std::endl;
+		    if (ret)
+		    {
+			std::cout << "Goal not free" << std::endl << std::flush;
+			fitness = state->getScore();
+			delete goal;
+			delete state;
+			return fitness*fitness;
+		    }
+		    std::cout << "Start: " << std::endl << (*state) << std::endl;
+		    std::cout << "Goal: " << bob[i+1].first << "," << bob[i+1].second << std::endl << (*goal) << std::endl;
+		    std::vector<MineState*> nodes;
+		    try
+		    {
+			nodes = waypointAStar(state, goal);
+		    }
+		    catch (int error)
+		    {
+			fitness = state->getScore();
+			delete state;
+			delete goal;
+			return fitness*fitness;
+		    }
+		    delete state;
+		    delete goal;
+		    std::cout << "Got nodes: " << nodes.size() << std::endl;
+		    state = nodes[nodes.size()-1];
+		    // Clean up to avoid memory leaks
+		    /*
+		    for (int j = 0; j < nodes.size()-1; j++)
+		    {
+			delete nodes[i];
+		    }
+		    */
 		}
+		fitness = state->getScore();
+		std::cout << fitness*fitness << std::endl;
 		return fitness*fitness; // Give better fitness an extra advantage...
 	}
 
@@ -124,18 +168,31 @@ namespace walkBreeder {
 
 int main ()
 {
-	// Seed the random number generator.
-	srand ( time(0) );
+    // Seed the random number generator.
+    srand ( time(0) );
 
-	GeneticAlgorithm< Walk > breeder( 50, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
-	for( int i=0; i < 100; i++ ) {
-		std::cout<< breeder.incrementGeneration() << "\n";
-	}
+    // Read in the map
+    std::stringstream buffer;
+    buffer << std::cin.rdbuf();
+    std::string input(buffer.str());
+    MineState* initialMine = new NaiveMineState(input);
 
-	Walk w = randomWalk( std::pair<int,int>( 0, 0 ), 10, 100, 30 );
-	for( int i = 0; i < w.length(); i++ ) {
-		std::cout<< w[i].first << " " << w[i].second << "\n";
-	}
+    //std::cout << "Read in map" << std::endl;
 
-	return 0;
+    walkBreeder::start = initialMine;
+    walkBreeder::width = initialMine->getWidth();
+    walkBreeder::height = initialMine->getHeight();
+    GeneticAlgorithm< Walk > breeder(3, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
+    for( int i=0; i < 100; i++ ) {
+	std::cout<< breeder.incrementGeneration() << "\n";
+    }
+
+    /*
+    Walk w = randomWalk( std::pair<int,int>( 0, 0 ), 10, 100, 30 );
+    for( int i = 0; i < w.length(); i++ ) {
+	std::cout<< w[i].first << " " << w[i].second << "\n";
+    }
+    */
+
+    return 0;
 }

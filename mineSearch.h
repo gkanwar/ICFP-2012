@@ -1,6 +1,8 @@
 #ifndef __MINE_SEARCH__
 #define __MINE_SEARCH__
 
+#include <cmath>
+
 #include "mine.h"
 
 namespace mineStateSearch {
