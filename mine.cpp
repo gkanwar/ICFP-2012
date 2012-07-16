@@ -120,6 +120,7 @@ NaiveMineState::NaiveMineState(const NaiveMineState& base) {
 
 NaiveMineState::NaiveMineState(const MineState*& base) {
 	// Initialize the variables
+    std::cout << "Starting copy" << std::endl << std::flush;
 	this->height = base->getHeight();
 	this->width = base->getWidth();
 	this->robot = base->getRobot();
@@ -138,6 +139,7 @@ NaiveMineState::NaiveMineState(const MineState*& base) {
 	}
 
 	// Initialize the meta variables (TODO)
+    std::cout << "Ending copy" << std::endl << std::flush;
 }
 
 // Destructors

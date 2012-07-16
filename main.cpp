@@ -105,7 +105,11 @@ namespace walkBreeder {
 			// With chance 1 / 50 ....
 			if( rand() % 50 == 0 ) {
 				waypoint.first += ( rand() % 3 - 1 );
+				if (waypoint.first < 0) { waypoint.first = 0; }
+				else if (waypoint.first >= height) { waypoint.first = height-1; }
 				waypoint.second += ( rand() % 3 - 1 );
+				if (waypoint.second < 0) { waypoint.second = 0; }
+				else if (waypoint.second >= width) { waypoint.second = width-1; }
 			};
 			child.append( waypoint );
 		}
@@ -115,26 +119,29 @@ namespace walkBreeder {
 	float fitness( Walk bob ) {
 		float fitness = 0;
 		MineState* state = start->copySelf();
-		std::cout << "Checking fitness" << std::endl;
-		std::cout << "path length: " << bob.length() << std::endl;
+		//std::cout << "Checking fitness" << std::endl;
+		//std::cout << "path length: " << bob.length() << std::endl;
+		MineState* goal;
+		bool ret;
+		std::vector<MineState*> nodes;
 		// For each segment of the path...
 		for( int i = 0; i < bob.length() - 1; i++ ) {
-		    std::cout << i << std::endl;
-		    MineState* goal = state->copySelf();
-		    std::cout << "Made copy -> goal" << std::endl;
-		    bool ret = goal->setRobot(bob[i+1]);
-		    std::cout << "Set the robot of goal" << std::endl;
-		    if (ret)
+		    //std::cout << i << ", robot: " << state->getRobot().first << "," << state->getRobot().second << std::endl << ", waypoint: " << bob[i+1].first << "," << bob[i+1].second << std::flush;
+		    goal = state->copySelf();
+		    //std::cout << "Made copy -> goal" << std::endl << std::flush;
+		    ret = goal->setRobot(bob[i+1]);
+		    //std::cout << "Set the robot of goal" << std::endl << std::flush;
+		    if (!ret)
 		    {
-			std::cout << "Goal not free" << std::endl << std::flush;
+			//std::cout << "Goal not free" << std::endl << std::flush;
 			fitness = state->getScore();
 			delete goal;
 			delete state;
+			//std::cout << "...quitting, fitness: " << fitness << std::endl << std::flush;
 			return fitness*fitness;
 		    }
-		    std::cout << "Start: " << std::endl << (*state) << std::endl;
-		    std::cout << "Goal: " << bob[i+1].first << "," << bob[i+1].second << std::endl << (*goal) << std::endl;
-		    std::vector<MineState*> nodes;
+		    //std::cout << "Start: " << std::endl << (*state) << std::endl << std::flush;
+		    //std::cout << "Goal: " << bob[i+1].first << "," << bob[i+1].second << std::endl << (*goal) << std::endl << std::flush;
 		    try
 		    {
 			nodes = waypointAStar(state, goal);
@@ -148,7 +155,7 @@ namespace walkBreeder {
 		    }
 		    delete state;
 		    delete goal;
-		    std::cout << "Got nodes: " << nodes.size() << std::endl;
+		    //std::cout << "Got nodes: " << nodes.size() << std::endl << std::flush;
 		    state = nodes[nodes.size()-1];
 		    // Clean up to avoid memory leaks
 		    /*
@@ -159,7 +166,7 @@ namespace walkBreeder {
 		    */
 		}
 		fitness = state->getScore();
-		std::cout << fitness*fitness << std::endl;
+		//std::cout << "Fitness: " << fitness*fitness << std::endl << std::flush;
 		return fitness*fitness; // Give better fitness an extra advantage...
 	}
 
@@ -182,7 +189,7 @@ int main ()
     walkBreeder::start = initialMine;
     walkBreeder::width = initialMine->getWidth();
     walkBreeder::height = initialMine->getHeight();
-    GeneticAlgorithm< Walk > breeder(3, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
+    GeneticAlgorithm< Walk > breeder(50, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
     for( int i=0; i < 100; i++ ) {
 	std::cout<< breeder.incrementGeneration() << "\n";
     }
