@@ -191,17 +191,15 @@ const std::pair<int, int>& NaiveMineState::getRobot() const {
 	return robot;
 }
 
-bool NaiveMineState::setRobot(std::pair<int, int> loc) {
-    char targetObject = (*this)(loc.first, loc.second);
-    if (targetObject == EMPTY || targetObject == EARTH || targetObject == LAMBDA || targetObject == OPEN_LIFT)
-    {
+bool NaiveMineState::isSpaceMoveable(std::pair<int, int> loc) {
+	char targetObject = (*this)(loc.first, loc.second);
+	return (targetObject == EMPTY || targetObject == EARTH || targetObject == LAMBDA || targetObject == OPEN_LIFT || targetObject == BEARD);
+}
+
+void NaiveMineState::setRobot(std::pair<int, int> loc) {
 	(*this)(robot.first, robot.second) = EMPTY;
 	(*this)(loc.first, loc.second) = ROBOT;
 	robot = loc;
-	return true;
-    }
-
-    return false;
 }
 
 const int& NaiveMineState::getWidth() const {
