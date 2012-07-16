@@ -129,9 +129,9 @@ namespace walkBreeder {
 		    //std::cout << i << ", robot: " << state->getRobot().first << "," << state->getRobot().second << std::endl << ", waypoint: " << bob[i+1].first << "," << bob[i+1].second << std::flush;
 		    goal = state->copySelf();
 		    //std::cout << "Made copy -> goal" << std::endl << std::flush;
-		    ret = goal->setRobot(bob[i+1]);
+		    char goalObject = (*goal)(bob[i+1].first, bob[i+1].second);
 		    //std::cout << "Set the robot of goal" << std::endl << std::flush;
-		    if (!ret)
+		    if (!isObjectReachable(goalObject))
 		    {
 			//std::cout << "Goal not free" << std::endl << std::flush;
 			fitness = state->getScore();
@@ -140,6 +140,7 @@ namespace walkBreeder {
 			//std::cout << "...quitting, fitness: " << fitness << std::endl << std::flush;
 			return fitness*fitness;
 		    }
+		    goal->setRobot(bob[i+1]);
 		    //std::cout << "Start: " << std::endl << (*state) << std::endl << std::flush;
 		    //std::cout << "Goal: " << bob[i+1].first << "," << bob[i+1].second << std::endl << (*goal) << std::endl << std::flush;
 		    try
@@ -194,16 +195,17 @@ std::string getCommandsFromWalk(MineState* initialMine, Walk walk) {
 	//std::cout << i << ", robot: " << state->getRobot().first << "," << state->getRobot().second << std::endl << ", waypoint: " << bob[i+1].first << "," << bob[i+1].second << std::flush;
 	goal = state->copySelf();
 	//std::cout << "Made copy -> goal" << std::endl << std::flush;
-	ret = goal->setRobot(walk[i+1]);
+	char goalObject = (*goal)(walk[i+1].first, walk[i+1].second);
 	//std::cout << "Set the robot of goal" << std::endl << std::flush;
-	if (!ret)
+	if (!isObjectReachable(goalObject))
 	{
-	    std::cout << "Goal not free: " << i << "/" << walk.length() << std::endl << std::flush;
+	    //std::cout << "Goal not free: " << i << "/" << walk.length() << std::endl << std::flush;
 	    delete goal;
 	    delete state;
 	    //std::cout << "...quitting, fitness: " << fitness << std::endl << std::flush;
 	    return getStringFromCharVector(commands);
 	}
+	goal->setRobot(walk[i+1]);
 	//std::cout << "Start: " << std::endl << (*state) << std::endl << std::flush;
 	//std::cout << "Goal: " << bob[i+1].first << "," << bob[i+1].second << std::endl << (*goal) << std::endl << std::flush;
 	try
@@ -212,7 +214,7 @@ std::string getCommandsFromWalk(MineState* initialMine, Walk walk) {
 	}
 	catch (int error)
 	{
-	    std::cout << "A* failed" << std::endl;
+	    //std::cout << "A* failed" << std::endl;
 	    delete goal;
 	    delete state;
 	    return getStringFromCharVector(commands);
@@ -255,6 +257,7 @@ int main ()
     walkBreeder::start = initialMine;
     walkBreeder::width = initialMine->getWidth();
     walkBreeder::height = initialMine->getHeight();
+    walkBreeder::walkLength = initialMine->getWidth() * initialMine->getHeight();
     GeneticAlgorithm< Walk > breeder(50, walkBreeder::fitness, walkBreeder::breed, walkBreeder::getRandomCreature );
     for( int i=0; i < 100; i++ ) {
 	std::cout<< breeder.incrementGeneration() << std::endl;

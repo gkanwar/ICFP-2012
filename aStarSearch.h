@@ -2,6 +2,20 @@
 #define __A_STAR_SEARCH__
 
 template <class Node>
+bool findInVector(std::vector< Node > nodes, bool (*equals)( Node, Node ), Node obj)
+{
+    for (int i = 0; i < nodes.size(); i++)
+    {
+	if (equals(nodes[i], obj))
+	{
+	    return true;
+	}
+    }
+
+    return false;
+}
+
+template <class Node>
 std::vector<Node> aStarSearch( Node start, Node goal, bool (*equals)( Node, Node ), std::vector< Edge< Node > > (*neighbors)( Node ),  float (*heuristic)( Node, Node ) ) {
 
 	// Set of nodes we're still looking at.
@@ -49,13 +63,13 @@ std::vector<Node> aStarSearch( Node start, Node goal, bool (*equals)( Node, Node
 			Node neighbor = it->target;
 			float cost = it->cost;
 			// Make sure we haven't visited this node before.
-			if( find( visitedNodes.begin(), visitedNodes.end(), neighbor ) != visitedNodes.end() ) {
+			if( findInVector(visitedNodes, equals, neighbor) ) {
 				continue;
 			}
 
 			// Add this neighbor to open nodes if appropriate.
 			if(
-				( find( openNodes.begin(), openNodes.end(), neighbor ) == openNodes.end() )
+			    ( !findInVector( openNodes, equals, neighbor ) )
 				|| ( cost < knownCost[ neighbor ] - knownCost[ current ] )
 			) {
 				openNodes.push_back( neighbor );

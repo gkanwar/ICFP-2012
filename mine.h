@@ -41,7 +41,7 @@ public:
 
 	//Virtual Setters
 	virtual void setElement(std::pair<int, int> loc, char value) = 0;
-	virtual bool setRobot(std::pair<int, int> loc) = 0; // Warning: This will overwrite the element at the robot location
+	virtual void setRobot(std::pair<int, int> loc) = 0; // Warning: This will overwrite the element at the robot location
 	virtual void setDoneType(int doneType) = 0;
 	virtual void setDone(bool done) = 0;
 	virtual void setMoves(int moves) = 0;
@@ -101,7 +101,7 @@ public:
 
 	// Setters
 	void setElement(std::pair<int, int> loc, char value);
-	bool setRobot(std::pair<int, int> loc); // Warning: This will overwrite the element at the robot location
+	void setRobot(std::pair<int, int> loc); // Warning: This will overwrite the element at the robot location
 	void setDoneType(int doneType);
 	void setDone(bool done);
 	void setMoves(int moves);
@@ -129,5 +129,11 @@ MineState* stepMineState(MineState* state, char command);
 MineState* transduceMineState(MineState* state, std::string commands);
 MineState* transduceMineState(MineState* state, std::string commands, bool print);
 MineState* transduceMineState(MineState* state, std::string commands, bool print, float delay);
+
+// Check if a space is moveable
+static bool isObjectReachable(char object)
+{
+    return (object == EMPTY || object == EARTH || object == LAMBDA || object == CLOSED_LIFT || object == OPEN_LIFT);
+}
 
 #endif
