@@ -189,4 +189,10 @@ MineState* transduceMineState(MineState* state, std::string commands);
 MineState* transduceMineState(MineState* state, std::string commands, bool print);
 MineState* transduceMineState(MineState* state, std::string commands, bool print, float delay);
 
+// Check if a space is moveable
+static bool isObjectReachable(char object)
+{
+    return (object == EMPTY || object == EARTH || object == LAMBDA || object == CLOSED_LIFT || object == OPEN_LIFT);
+}
+
 #endif

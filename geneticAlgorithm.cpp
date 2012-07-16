@@ -1,6 +1,6 @@
 //Picks an index of weights. A given index i is returned with probabilty p = weights[ i ] / sum( weights )
 int weightedChoice( std::vector< float > weights ) {
-
+    //std::cout << "Start weighted choice" << std::endl << std::flush;
     float sumOfWeights = 0;
     for(
         std::vector<float>::iterator j=weights.begin();
@@ -8,6 +8,11 @@ int weightedChoice( std::vector< float > weights ) {
         ++j
     ) {
         sumOfWeights += *j;
+    }
+
+    if (sumOfWeights == 0)
+    {
+	return 0;
     }
     
     float location =  sumOfWeights*(float)rand()/(float)RAND_MAX;
@@ -22,6 +27,7 @@ int weightedChoice( std::vector< float > weights ) {
         index++;
     }
 
+    //std::cout << "End weighted choice: " << index-1 << std::endl << std::flush;
     return index - 1;
 }
 
@@ -52,11 +58,29 @@ float GeneticAlgorithm<Creature>::incrementGeneration() {
     for( int index = 0; index < this->populationSize; index ++ ) {
         Creature mom = this->population[ weightedChoice( fitnesses )];
         Creature pop = this->population[ weightedChoice( fitnesses )];
+	//std::cout << "Breeding" << std::endl << std::flush;
         newPopulation[ index ] = (*(this->breed))( mom, pop );
+	//std::cout << "Done Breeding" << std::endl << std::flush;
     }
 
     this->fossilRecord.push_back( this->population );
     this->population = newPopulation;
 
     return sumFitness / this->populationSize;
+}
+
+template <class Creature>
+Creature* GeneticAlgorithm<Creature>::getBestCreature()
+{
+    Creature* best;
+    float bestFitness = 0;
+    for( int index = 0; index < this->populationSize; index ++ ) {
+        float fitness = (*(this->fitness))( this->population[ index ] );
+	if (fitness >= bestFitness) {
+	    best = &(this->population[index]);
+	    fitness = bestFitness;
+	}
+    }
+
+    return best;
 }
