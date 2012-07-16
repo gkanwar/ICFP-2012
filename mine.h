@@ -12,6 +12,8 @@
 #define ROCK '*'
 #define ROBOT 'R'
 #define WALL '#'
+#define BEARD 'W'
+#define RAZOR '!'
 // TODO: Special symbols
 
 // Various possible commands
@@ -54,9 +56,11 @@ public:
 	virtual void setStepsUnderwater(int steps) = 0;
 
 	// Incrementers
-	virtual void incrementMoves();
-	virtual void incrementLambdas();
-	virtual void incrementStepsUnderwater();
+	virtual void incrementMoves() = 0;
+	virtual void incrementLambdas() = 0;
+	virtual void incrementStepsUnderwater() = 0;
+	virtual void incrementRazors() = 0;
+	virtual void decrementRazors() = 0;
 
 	//Virtual Transient Getters
 	virtual const char& getElement(std::pair<int, int> loc) const = 0;
@@ -73,17 +77,17 @@ public:
 	virtual const int& getStepsUnderwater() const = 0;
 
 	// Metadata
-	virtual const int& getWater() const;
-	virtual const int& getFlooding() const;
-	virtual const int& getWaterproof() const;
-	virtual const std::vector<std::pair<char, char> > getTrampolines() const;
-	virtual const int& getGrowth() const;
-	virtual const int& getRazors() const;
+	virtual const int& getWater() const = 0;
+	virtual const int& getFlooding() const = 0;
+	virtual const int& getWaterproof() const = 0;
+	virtual const std::vector<std::pair<char, char> >& getTrampolines() const = 0;
+	virtual const int& getGrowth() const = 0;
+	virtual const int& getRazors() const = 0;
 
 	// Specials
-	virtual int getWaterLevel();
-	virtual char getTrampolineTarget(char trampoline);
-
+	virtual int getWaterLevel() = 0;
+	virtual char getTrampolineTarget(char trampoline) = 0;
+	virtual bool beardGrows() = 0;
 };
 
 // This is a map representation that naively makes copies
@@ -140,6 +144,8 @@ public:
 	void incrementMoves();
 	void incrementLambdas();
 	void incrementStepsUnderwater();
+	void incrementRazors();
+	void decrementRazors();
 	
 	//***Getters***//
 
@@ -162,13 +168,14 @@ public:
 	const int& getWater() const;
 	const int& getFlooding() const;
 	const int& getWaterproof() const;
-	const std::vector<std::pair<char, char> > getTrampolines() const;
+	const std::vector<std::pair<char, char> >& getTrampolines() const;
 	const int& getGrowth() const;
 	const int& getRazors() const;
 
 	// Specials
 	int getWaterLevel();
 	char getTrampolineTarget(char trampoline);
+	bool beardGrows();
 	
 };
 

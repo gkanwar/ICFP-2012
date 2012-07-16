@@ -155,6 +155,12 @@ NaiveMineState::NaiveMineState(const MineState*& base) {
 	}
 
 	// Initialize the meta variables (TODO)
+	this->water = base->getWater();
+	this->flooding = base->getFlooding();
+	this->waterproof = base->getWaterproof();
+	this->trampolines = base->getTrampolines();
+	this->growth = base->getGrowth();
+	this->razors = base->getRazors();
 }
 
 // Destructors
@@ -270,7 +276,7 @@ const int& NaiveMineState::getWaterproof() const {
 	return waterproof;
 }
 
-const std::vector<std::pair<char, char> > NaiveMineState::getTrampolines() const {
+const std::vector<std::pair<char, char> >& NaiveMineState::getTrampolines() const {
 	return trampolines;
 }
 
@@ -280,6 +286,14 @@ const int& NaiveMineState::getGrowth() const {
 
 const int& NaiveMineState::getRazors() const {
 	return razors;
+}
+
+void NaiveMineState::incrementRazors() {
+	this->razors++;
+}
+
+void NaiveMineState::decrementRazors() {
+	this->razors--;
 }
 
 int NaiveMineState::getScore() {
@@ -310,6 +324,10 @@ char NaiveMineState::getTrampolineTarget(char trampoline) {
 	}
 	std::cout << "Warning: trampoline not found" << std::endl;
 	return -1;
+}
+
+bool NaiveMineState::beardGrows() {
+	return moves % growth == 0;
 }
 
 MineState* stepMineState(MineState* state, char command) {
@@ -348,6 +366,7 @@ MineState* stepMineState(MineState* state, char command) {
 		case EARTH:
 		case LAMBDA:
 		case OPEN_LIFT:
+		case RAZOR:
 		{
 			// Update both states, since the robot moves before map is updated
 			stateCopy->setRobot(robotNew);
@@ -355,8 +374,11 @@ MineState* stepMineState(MineState* state, char command) {
 				stateCopy->incrementLambdas();
 			}
 			else if (newLocObject == OPEN_LIFT) {
-			    stateCopy->setDone(true);
-			    stateCopy->setDoneType(WIN);
+				stateCopy->setDone(true);
+				stateCopy->setDoneType(WIN);
+			}
+			else if (newLocObject == RAZOR) {
+				stateCopy->incrementRazors();
 			}
 			break;
 		}
@@ -412,6 +434,19 @@ MineState* stepMineState(MineState* state, char command) {
 		}
 	}
 
+	// shave
+	if (command == 'S' && state->getRazors() > 0) {
+		for (int i = robotNew.first-1; i < robotNew.first+1; i++) {
+			for (int j = robotNew.second-1; j < robotNew.second+1; j++) {
+				if ((*stateCopy)(i, j) == BEARD) {
+					(*stateCopy)(i, j) = EMPTY;
+				}
+			}
+		}
+		state->decrementRazors();
+	}
+				
+
 	// Check for the abort command, otherwise update moves
 	if (command == 'A') {
 		stateCopy->setDone(true);
@@ -464,6 +499,15 @@ MineState* stepMineState(MineState* state, char command) {
 			else if ((*stateCopy)(i, j) == CLOSED_LIFT) {
 				sawClosedLift = true;
 				closedLiftCoords = std::pair<int, int>(i, j);
+			}
+			else if ((*stateCopy)(i, j) == BEARD and stateCopy->beardGrows()) {
+				for (int ii = i-1; ii <= i+1; ii++) {
+					for (int jj = j-1; jj <= j+1; jj++) {
+						if ((*stateCopy)(i, j) == EMPTY) {
+							(*stateCopy)(i, j) = BEARD;
+						}
+					}
+				}
 			}
 		}
 	}
